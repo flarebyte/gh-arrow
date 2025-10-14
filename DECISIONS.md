@@ -164,3 +164,72 @@ The utility should support optional glob-like filtering (`*` and `**`) and resol
 - Output plain list of file paths, relative to the matched directory.
 - Prefer local mapped path if available for `github:` sources.
 - Support basic glob patterns (`*`, `**`) for flexible filtering.
+
+## Specification Extension: Advanced File Listing with GitHub Org Search
+
+---
+
+**Problem Description**
+Enhance the `gha ls` command to support organization-wide file listing based on GitHub metadata filters using the command:
+`gha ls --org <owner> --topic <topic> <filename>`
+This command searches across multiple repositories within a GitHub organization or user, optionally filtered by repository topic, and lists the specified file path if it exists.
+
+---
+
+**Use Cases**
+
+1. List all `package.json` files from repositories under a GitHub org:
+
+   - `gha ls --org openai package.json`
+
+2. List all matching files under repos with a specific topic label:
+
+   - `gha ls --org openai --topic cli README.md`
+
+3. Enumerate all repos under an org containing `config.yaml` at the root:
+
+   - `gha ls --org tools-org config.yaml`
+
+4. Use as a discovery tool to find where a certain file is defined across projects in a codebase.
+
+---
+
+**Edge Cases**
+
+- Org name is invalid or the organization has no public repositories.
+- No repositories with the specified topic.
+- File does not exist in any of the matched repositories.
+- Filename provided is a directory or non-existent path.
+- GitHub API rate limits during broad org queries.
+- Repos are archived or forks (should still be listed unless explicitly filtered).
+- Repos that require authentication are skipped without error unless configured otherwise.
+
+---
+
+**Behavior Notes**
+
+- Only public repositories are queried unless authenticated GitHub access is implemented (not in scope).
+- File path should be matched relative to repository root.
+- Topics are matched against GitHub repository topics (tags/labels, not content).
+- The result should list matching repositories and the full file path if found.
+
+---
+
+**Constraints / Not to Handle**
+
+- Do not fetch file content—only list presence and paths.
+- Do not search file contents (no full-text search).
+- Do not access private repositories.
+- Do not filter by license, stars, or other metadata.
+- Do not allow recursive glob patterns in this form.
+- Do not deduplicate results across forks unless explicitly configured.
+
+---
+
+**Expected Behavior Summary**
+
+- Use GitHub API to list repositories under the specified org.
+- Filter by topic if `--topic` is provided.
+- For each matching repository, check if the specified file exists.
+- Output repository name and file path for each match.
+- No output or an empty result if no matches are found.
