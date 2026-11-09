@@ -1,0 +1,10 @@
+id,example,expected,concept
+U01,gh arrow cp github:owner:project:path/to/file.yaml ./local.yaml,Copy from GitHub or the configured local working tree.,files
+U02,gh arrow cat local:project2:file.md,Display a file from a named local mapping.,files
+U03,gh arrow cp local:project2:file.md ./file.md,Copy from a private or non-GitHub local project.,files
+U04,gh arrow cat github:owner:project:file.yaml,Display remote bytes without saving a file.,files
+U05,gh arrow ls github:owner:project:docs/,List files directly within docs.,files.list
+U06,gh arrow ls 'local:project2:docs/*.md',List Markdown files directly within docs.,files.list
+U07,gh arrow ls 'github:owner:project:src/**',List files recursively below src.,files.list
+U08,gh arrow ls --org tools-org package.json,Find root package.json files across repositories.,discovery
+U09,gh arrow ls --org tools-org --topic cli README.md --json,Return machine-readable matches for repositories with topic cli.,discovery

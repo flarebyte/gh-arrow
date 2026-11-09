@@ -1,0 +1,8 @@
+id,description,parent
+extension,GitHub CLI packaging and invocation,
+source,Source grammar and resolution,
+config,Read-only local mappings,
+files,File operations,
+files.list,Directory listing and glob patterns,files
+discovery,Organization or user repository discovery,
+automation,Human and agent interaction contracts,

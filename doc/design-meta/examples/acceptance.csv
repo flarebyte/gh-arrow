@@ -1,0 +1,14 @@
+id,scenario,expected,concept
+A01,Mapped GitHub repository contains the requested file,Read local bytes without a network call.,source
+A02,Mapped GitHub repository lacks the requested file,ARROW_NOT_FOUND and exit 1; no remote fallback.,source
+A03,Missing default config; missing explicit config; empty config; malformed config,No mappings; exit 2; no mappings; exit 2 respectively.,config
+A04,Invalid source or unsupported ftp scheme,ARROW_USAGE and exit 2.,source
+A05,Destination exists without --force or parent is unwritable,Exit 1 with ARROW_EXISTS or ARROW_PERMISSION; preserve existing file.,files
+A06,Network failure or rate limiting while enumerating,Exit 1; diagnostic code on stderr; no partial stdout.,automation
+A07,File operand; empty directory; unmatched glob; invalid glob,Single file; zero results; zero results; exit 2 respectively.,files.list
+A08,Recursive remote tree is truncated,Complete traversal or ARROW_INCOMPLETE with exit 1.,files.list
+A09,Invalid owner; valid owner without repositories; no topic matches; no file matches,Exit 1; empty success; empty success; empty success respectively.,discovery
+A10,Discovery operand refers to a directory,Do not report a file match.,discovery
+A11,Authenticated accessible private repository,Read using existing gh credentials; never request arrow-specific credentials.,extension
+A12,Source traversal or symlink escaping mapped root,Reject access; never read outside the root.,source
+A13,Repeated listing over unchanged fixtures,Identical sorted text and JSON outputs.,automation

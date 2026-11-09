@@ -1,0 +1,8 @@
+id,syntax,behavior,concept
+C01,gh arrow cp <source> <destination> [--force],Copy one file; refuse existing destination unless --force.,files
+C02,gh arrow cat <source>,Write exact file bytes to stdout.,files
+C03,gh arrow ls <source> [--json],List matching files; quote shell globs.,files.list
+C04,gh arrow ls --org <owner> [--topic <topic>] <path> [--json],Find an exact repository-relative file across an organization or user.,discovery
+C05,gh arrow <command> --help,Show syntax and copyable examples without network access.,automation
+C06,gh arrow <command> --config <path>,Override the default ./config.yaml mapping file.,config
+C07,gh arrow <command> --ref <ref>,Select a remote branch tag or commit; reject for mapped sources and organization discovery in v1.,source

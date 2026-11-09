@@ -1,0 +1,23 @@
+id,requirement,concept
+R01,Accept github:<owner>:<repo>:<path> and local:<alias>:<path>; require nonempty identity segments. Paths use forward slashes; colon is reserved. Empty path is valid only for ls and means repository root.,source
+R02,Resolve github owner:repo through github.mappings first; otherwise use the GitHub API on github.com. Resolve local alias only through local.mappings. Do not infer identities from URLs.,source
+R03,Remote operations use the repository default branch unless --ref is supplied. Read the selected ref consistently within one operation.,source
+R04,Reject absolute source paths and parent traversal. Local resolution must remain within the mapped root after symlink resolution; skip symlinks in listings and reject symlink file sources.,source
+R05,Read ./config.yaml relative to the working directory unless --config overrides it. Missing default config means no mappings; missing explicit config is an error. Empty config means no mappings.,config
+R06,"Reject malformed YAML, unknown keys, duplicate repo mappings, empty identities and nonabsolute roots. Never write configuration at runtime.",config
+R07,cp requires an existing destination parent; do not create directories. Reject directory sources and destinations. Preserve file bytes; report write errors without claiming success.,files
+R08,cat emits raw bytes only. cp emits no stdout on success. Send diagnostics to stderr.,automation
+R09,ls outputs files only in lexicographic order with forward slashes and no headers or decoration. Paths are relative to the literal directory prefix before a glob; for a file operand return its basename.,files.list
+R10,"Support * within a filename and ** as a complete recursive directory segment; ** includes zero directories. Reject ?, bracket patterns and embedded **. Directory-segment wildcards other than ** are unsupported.",files.list
+R11,A directory operand lists immediate files; a file operand lists that file. Empty directories and unmatched valid globs succeed with zero results; missing literal paths fail. Apply the same semantics locally and remotely.,files.list
+R12,Use API directory/tree enumeration rather than scraping GitHub pages. Detect truncated responses; complete enumeration or return an explicit incomplete-results error. Skip submodules and symlinks.,files.list
+R13,--org accepts an organization or user; enumerate all accessible repositories with pagination. Include archived repositories and forks; do not deduplicate forks.,discovery
+R14,Filter by exact topic when provided and check an exact nonempty file path relative to each repository root on its default branch. Reject globs and directory operands. Do not fetch file contents.,discovery
+R15,Organization discovery always checks remote repositories and ignores local mappings. Include accessible private repositories through gh credentials; inaccessible repositories cannot be guaranteed discoverable.,discovery
+R16,For discovery output owner/repo:path one per line sorted by owner/repo then path. No matches succeeds with empty output.,discovery
+R17,"Never prompt or launch a browser during file operations. If authentication is needed, fail with guidance to run gh auth login separately. Do not expose credentials in diagnostics.",automation
+R18,ls --json returns a JSON array of records as defined in listing.ts; empty result is []. Reject --json for cat and cp to protect byte-stream semantics.,automation
+R19,"Exit 0 for success including no matches; 1 for I/O, network, authentication, rate-limit or incomplete enumeration failures; 2 for invalid arguments, sources or configuration.",automation
+R20,On enumeration failure return nonzero with no success listing on stdout; diagnostics identify the failing operation. Report rate limits without silently skipping repositories.,automation
+R21,"Use human-readable stderr messages prefixed by stable error codes: ARROW_USAGE, ARROW_CONFIG, ARROW_NOT_FOUND, ARROW_EXISTS, ARROW_PERMISSION, ARROW_AUTH, ARROW_NETWORK, ARROW_RATE_LIMIT, ARROW_INCOMPLETE, ARROW_IO.",automation
+R22,Build a gh-arrow executable and publish precompiled release assets following GitHub CLI platform naming conventions. Document local build and gh extension install . once implementation exists.,extension
