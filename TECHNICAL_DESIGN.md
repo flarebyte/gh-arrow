@@ -72,7 +72,8 @@ rather than being silently rewritten in JSON.
   owned repositories. Public and authenticated user enumeration are combined.
 - Traversal: at most 256 directory levels and one million visited entries;
   remote repositories additionally cap cached tree metadata at one million
-  entries and 10,000 distinct tree requests. Limit failures are explicit.
+  entries, a 64 MiB accounting budget for strings and per-entry overhead, and
+  10,000 distinct tree requests. Limit failures are explicit.
 - Files are streamed rather than buffered in memory. GitHub API file-size limits
   are reported as failures; no successful truncation or content cache is allowed.
 

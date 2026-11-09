@@ -213,3 +213,23 @@ func TestMissingTreePayloadIsNotEmptySuccess(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestTreeCacheBoundsCumulativeBytes(t *testing.T) {
+	// Multiple individually legal responses must not grow an unbounded cache.
+	// Large virtual names simulate hostile repository metadata without file reads.
+	body := fmt.Sprintf(`{"tree":[{"path":%q,"type":"blob","mode":"100644","sha":%q}]}`, strings.Repeat("x", 4<<20), blobSHA)
+	client := &Client{HTTP: &http.Client{Transport: transport(func(*http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: 200, Header: make(http.Header), Body: io.NopCloser(strings.NewReader(body))}, nil
+	})}}
+	repo := &Repository{client: client, name: "o/r", trees: make(map[string][]treeEntry)}
+	for i := range 17 {
+		_, err := repo.tree(context.Background(), fmt.Sprint(i))
+		if err != nil {
+			if diagnostic.Code(err) != "ARROW_INCOMPLETE" {
+				t.Fatal(err)
+			}
+			return
+		}
+	}
+	t.Fatal("cache accepted more than 64 MiB of metadata")
+}

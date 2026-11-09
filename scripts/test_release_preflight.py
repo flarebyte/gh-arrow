@@ -33,6 +33,45 @@ class FakeGitHub:
 
 
 class ReleasePreflightTests(unittest.TestCase):
+    def test_invalid_semver_is_rejected_before_git_or_network(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / '.gh-flarebyte.cue').write_text('''build: { checksumFile: "build/checksums.txt" }
+release: {
+ versionSource: "version.yaml"
+ tagPrefix: "v"
+ artifactDir: "build"
+ notesMode: "generate-notes"
+}
+''')
+            for version in ('01.2.3', '1.02.3', '1.2.03', '1.2.3-alpha..1',
+                            '1.2.3-alpha.01', '1.2.3+build..1'):
+                (root / 'version.yaml').write_text(f'version: {version}\n')
+                with self.subTest(version=version), self.assertRaisesRegex(PreflightError, 'Invalid release version'):
+                    release_metadata(root)
+
+    def test_prerelease_classification_ignores_hyphens_in_build_metadata(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / '.gh-flarebyte.cue').write_text('''build: { checksumFile: "build/checksums.txt" }
+release: {
+ versionSource: "version.yaml"
+ tagPrefix: "v"
+ artifactDir: "build"
+ notesMode: "generate-notes"
+}
+''')
+            for version, prerelease in (('0.1.0-alpha.1', 'true'),
+                                        ('1.2.3-alpha.1+build-1', 'true'),
+                                        ('1.2.3+build-1', 'false'),
+                                        ('1.2.3+001', 'false'),
+                                        ('1.2.3', 'false')):
+                (root / 'version.yaml').write_text(f'version: {version}\n')
+                with self.subTest(version=version), patch('release_preflight.subprocess.check_output', return_value='a' * 40):
+                    metadata = release_metadata(root)
+                    self.assertEqual(metadata['version'], version)
+                    self.assertEqual(metadata['prerelease'], prerelease)
+
     @staticmethod
     def response(status=200, body='{}'):
         response = io.StringIO(body)

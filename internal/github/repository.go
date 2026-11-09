@@ -25,6 +25,7 @@ type Repository struct {
 	trees           map[string][]treeEntry
 	requests        int
 	metadataEntries int
+	metadataBytes   int
 }
 
 func (c *Client) Repository(ctx context.Context, name, ref string) (*Repository, error) {
@@ -111,6 +112,16 @@ func (r *Repository) tree(ctx context.Context, sha string) ([]treeEntry, error) 
 			return nil, diagnostic.New("ARROW_NETWORK", "invalid GitHub tree entry")
 		}
 	}
+	// Bound retained strings as well as entry count. One large virtual name
+	// per response could otherwise bypass the count limit indefinitely.
+	bytes := len(t.Tree) * 128 // Include string headers and conservative per-entry overhead.
+	for _, entry := range t.Tree {
+		bytes += len(entry.Path) + len(entry.Mode) + len(entry.Type) + len(entry.SHA)
+	}
+	if bytes > MaxJSONBytes-r.metadataBytes {
+		return nil, diagnostic.New("ARROW_INCOMPLETE", "repository tree cache exceeds 64 MiB budget")
+	}
+	r.metadataBytes += bytes
 	r.trees[sha] = t.Tree
 	return t.Tree, nil
 }

@@ -21,6 +21,7 @@ jobs:
     timeout-minutes: 20
     outputs:
       version: ${{ steps.preflight.outputs.version }}
+      prerelease: ${{ steps.preflight.outputs.prerelease }}
       tag: ${{ steps.preflight.outputs.tag }}
       commit: ${{ steps.preflight.outputs.commit }}
       artifact_dir: ${{ steps.preflight.outputs.artifact_dir }}
@@ -75,6 +76,7 @@ jobs:
       RELEASE_TAG: ${{ needs.verify.outputs.tag }}
       RELEASE_COMMIT: ${{ needs.verify.outputs.commit }}
       RELEASE_VERSION: ${{ needs.verify.outputs.version }}
+      RELEASE_PRERELEASE: ${{ needs.verify.outputs.prerelease }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -98,7 +100,7 @@ jobs:
           mapfile -d '' assets < <(find "$ARTIFACT_DIR" -type f -print0)
           test "${#assets[@]}" -gt 0
           prerelease=()
-          if [[ "$RELEASE_VERSION" == *-* ]]; then prerelease=(--prerelease); fi
+          if [[ "$RELEASE_PRERELEASE" == true ]]; then prerelease=(--prerelease); fi
           # Creating a new ref is atomic: a competing existing tag causes failure.
           gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
             -f "ref=refs/tags/$RELEASE_TAG" -f "sha=$RELEASE_COMMIT" --silent

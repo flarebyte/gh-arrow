@@ -1,58 +1,79 @@
 # gh-arrow
 
-A Go GitHub CLI extension to copy, display, and discover files in GitHub repositories and mapped local projects. Invoke it as `gh arrow`; the repository and executable are named `gh-arrow`.
+A Go GitHub CLI extension to copy, display, and discover files in GitHub repositories and mapped local projects. Invoke it as `gh arrow`.
 
-**Status:** implemented and unreleased. Local and GitHub file operations and discovery are covered by offline tests. CI verifies native platform behavior before publication. The hosted repository is `gh-arrow`.
+**Version:** `0.1.0-alpha.1`, an unreleased alpha candidate. No installable release has been published. The commands are implemented and covered by offline tests; native platform checks are configured in CI.
 
-Usage:
+## Try it from a checkout
+
+You need GitHub CLI (tested with 2.103.3), Go 1.25+, and Make. The module pins Go 1.27.3; the standard Go launcher downloads that toolchain when necessary. From the repository root:
+
+```sh
+make build-go
+gh extension install .
+gh arrow --version
+gh arrow --help
+gh arrow cat github:flarebyte:gh-arrow:README.md
+```
+
+This installs a local development extension. The configured build targets are `darwin-arm64`, `linux-amd64`, and `windows-amd64`; native tests must pass before publishing support for them.
+
+## Usage
 
 ```sh
 gh arrow cp github:owner:project:path/to/file.yaml ./local.yaml
 gh arrow cat local:project2:file.md
+gh arrow cat github:owner:project:README.md --ref main
 gh arrow ls 'github:owner:project:docs/**/*.md'
 gh arrow ls --org tools-org --topic cli README.md --json
 ```
 
-GitHub sources prefer configured local working trees. Other remote operations use GitHub CLI API access and its existing credentials, including accessible private repositories. Operations never prompt. Remote access reads existing credentials through `gh auth token --hostname github.com` and uses fixed-host HTTPS API requests; no token is written to arrow configuration. Unauthenticated public access is supported when gh has no stored credentials. Listings support sorted text or JSON; `cat` preserves raw bytes. The default `./config.yaml` is trusted local configuration: review it before running in an unfamiliar checkout, or select a trusted file with `--config`. See the [configuration example](doc/design-meta/examples/config.yaml).
+Sources use `github:<owner>:<repo>:<path>` or `local:<alias>:<path>`. Paths use forward slashes; colon is reserved. Quote shell globs. `ls` supports filename `*` and recursive directory `**`; `cat` and `cp` treat filename metacharacters literally. Organization/user discovery checks exact file paths.
 
-Read the [generated specification](doc/design/specification.md) for command contracts, requirements, acceptance scenarios, and open questions. The editable source lives in [doc/design-meta](doc/design-meta/AGENTS.md), assembled by [app.cue](doc/design-meta/app.cue). The [original proposal](doc/history/initial-spec.md) is historical.
+GitHub sources prefer configured local working trees. A mapping deliberately selects local files: missing mapped files fail without a remote fallback. `--ref` selects a remote branch, tag, or commit and is rejected for mapped sources and discovery.
 
-To update the design, edit its sources and regenerate from the repository root:
+Mappings are loaded from `./config.yaml` relative to the working directory, or from `--config <path>`. Roots must be absolute local paths. A missing default config means no mappings; a missing explicitly selected config is an error. Review this trusted configuration before running in an unfamiliar checkout. See the [configuration example](doc/design-meta/examples/config.yaml).
 
-```sh
-# Requires Python 3 and flyb on PATH.
-sh scripts/doc-design.sh
-```
+Remote access uses GitHub.com and existing gh credentials. For private repositories, authenticate separately with `gh auth login`. Arrow never prompts, launches a browser, or stores tokens in its config. Public access can work without stored credentials. GitHub Enterprise hosts are outside this version's scope.
 
-Commit both the sources and generated Markdown. AI agents should start with [AGENTS.md](AGENTS.md) and retrieve only the relevant concept records.
+`cp` copies one file, requires an existing destination parent, and refuses an existing destination unless `--force` is given. It stages complete bytes before publication and rejects symlink destinations. Source permissions and timestamps are not copied; new files use private permissions.
 
-Local development requires Go 1.25+, Python 3.11+, Make, GitHub CLI 2.103.3+ (the tested baseline), and `gh flarebyte` v0.24.0 (the version pinned in CI). Install the tooling once, then run checks from the repository root:
+`cat` writes exact bytes, with no added newline. Successful `cp` writes no stdout. Listings are sorted; text escapes control characters, while `--json` preserves Unicode path values. JSON listings are arrays, including `[]` for no matches; discovery records additionally contain `repository`. Diagnostics go to stderr with stable `ARROW_*` codes. Exit status is 0 for success, 1 for I/O/network/authentication failures, and 2 for invalid arguments or configuration.
+
+## Development
+
+In addition to the tools above, development checks require Python 3.11+ and `gh flarebyte` v0.24.0:
 
 ```sh
 gh extension install flarebyte/gh-flarebyte --pin v0.24.0
 make check-tools
 make review
+make test-race
+make coverage
 make build
 ```
 
-`make help` lists the targets. `make test` runs Go unit/contract tests, release-tooling tests, and offline executable smoke checks. `make test-race` checks concurrent behavior; `make coverage` reports Go coverage. `make sec` runs the pinned vulnerability checker and fetches advisory data. YAML parsing and platform filesystem calls are the only direct module dependencies.
+`make help` lists targets. `make test` runs Go tests, release-tooling tests, and offline executable smoke checks. `make sec` downloads the pinned vulnerability checker and advisory data. YAML parsing and platform filesystem calls are the only direct Go dependencies. Build outputs and local Go caches are ignored.
 
-The initial build targets are `darwin-arm64`, `linux-amd64`, and `windows-amd64`. Native CI tests and vulnerability checks run on all three platforms; no release support guarantee exists until publication. For a local extension installation:
+The [CI workflow](.github/workflows/ci.yml) validates formatting, config/CSV inputs, lint, tests, and cross-platform builds. [Native checks](.github/workflows/native.yml) run filesystem tests, smoke checks, and vulnerability scans on Linux, macOS, and Windows. Normal tests use fixtures and never require real GitHub credentials or network access.
+
+The entry point is `cmd/gh-arrow/main.go`. See [TECHNICAL_DESIGN.md](TECHNICAL_DESIGN.md) for package boundaries, safety guarantees, runtime limits, and testing guidance. Development and build settings live in `.gh-flarebyte.cue`. The version in `main.project.yaml` is embedded in the executable; `--version` also reports available Git commit metadata without runtime config or network access.
+
+## Specification
+
+Read the [generated specification](doc/design/specification.md) for command contracts and acceptance scenarios. Edit [doc/design-meta](doc/design-meta/AGENTS.md), then regenerate from the repository root:
 
 ```sh
-make build-go
-gh extension install .
-gh arrow --help
+# Requires Python 3 and flyb on PATH.
+make doc-design
 ```
 
-The module language minimum is Go 1.25 because the fixed Windows filesystem dependency requires it. The module pins toolchain Go 1.27.3; the standard Go launcher downloads it when necessary. Make and flarebyte allow this automatic toolchain selection. CI and release builds also use Go 1.27.3.
+Commit source inputs and generated Markdown together. AI agents should start with [AGENTS.md](AGENTS.md). The [original proposal](doc/history/initial-spec.md) is historical.
 
-Pull requests and pushes to `main` run formatting, config/CSV validation, lint, tests, smoke checks, and cross-platform builds in [CI](.github/workflows/ci.yml). `make doc-design` additionally requires flyb to regenerate the specification.
+## Publishing
 
-Publishing uses the manually dispatched [release workflow](.github/workflows/release.yml). Before the first release, require successful native CI checks, perform an opt-in check against an accessible private repository, and replace `0.0.0-dev` in `main.project.yaml` with the chosen release version. Preflight blocks that scaffold version and existing tags/releases. If publishing fails after tag creation, follow the [release recovery procedure](doc/release-recovery.md) before retrying. The workflow verifies the default-branch commit, builds and checksums assets, then publishes those same assets with write permission confined to the publishing job. Prerelease versions are marked as prereleases. `make build-release` stages assets locally in `build/release` and refuses an existing staging directory; use a clean checkout for each release build. It does not publish.
+Publishing is a separate, manually dispatched [release workflow](.github/workflows/release.yml). Commit and merge the reviewed code and chosen version to the default branch, require successful native checks, and perform an opt-in test against an accessible private repository before publication. Local builds do not publish anything or sync repository settings.
 
-`gh arrow --version` reports the version embedded from `main.project.yaml` and available Git commit metadata without reading runtime config or accessing the network. This works independently of flarebyte's linker flags. No release has been published by this setup.
+Preflight validates SemVer and refuses existing tags/releases. The workflow builds and checksums assets, verifies them again after transfer, and publishes from the tested commit. Write permission is confined to the publishing job. Prerelease versions such as this alpha are marked as GitHub prereleases. `make build-release` stages verified assets locally in `build/release` and refuses an existing staging directory; use a clean checkout for each release build.
 
-The entry point is `cmd/gh-arrow/main.go`. See [TECHNICAL_DESIGN.md](TECHNICAL_DESIGN.md) for package boundaries, runtime limits, and testing guidance. Development and build settings live in `.gh-flarebyte.cue`; `main.project.yaml` holds the development version. Build outputs and Go caches are ignored. Repository sync and release publication are separate actions; local setup does not require either.
-
-The extension follows GitHub's [extension packaging conventions](https://docs.github.com/en/github-cli/github-cli/creating-github-cli-extensions).
+If publishing is interrupted, follow the [release recovery procedure](doc/release-recovery.md) before retrying. Packaging follows GitHub's [extension conventions](https://docs.github.com/en/github-cli/github-cli/creating-github-cli-extensions).

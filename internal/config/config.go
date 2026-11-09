@@ -46,7 +46,9 @@ func Load(name string, explicit bool) (Config, error) {
 	dec := yaml.NewDecoder(bytes.NewReader(data))
 	dec.KnownFields(true)
 	if err = dec.Decode(&c); err != nil && !errors.Is(err, io.EOF) {
-		return c, diagnostic.Wrap("ARROW_CONFIG", "decode configuration", err)
+		// YAML type errors can include scalar values from a misselected file.
+		// Report the schema failure without echoing potentially sensitive data.
+		return c, diagnostic.New("ARROW_CONFIG", "invalid YAML configuration; check syntax, field names and value types")
 	}
 	var extra any
 	if err = dec.Decode(&extra); !errors.Is(err, io.EOF) {

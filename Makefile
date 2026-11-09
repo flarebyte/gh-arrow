@@ -36,7 +36,7 @@ coverage: ## Report Go coverage.
 	$(FLAREBYTE) cov
 
 sec: ## Check reachable Go vulnerabilities (downloads the pinned checker and advisory data).
-	$(GO) run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+	GOTOOLCHAIN="$$($(GO) env GOVERSION)" $(GO) run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
 
 # Formatting must finish before checks, including under make -j.
 review: ## Format, validate, lint, and test locally.

@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/flarebyte/gh-arrow/internal/source"
@@ -26,6 +27,20 @@ func TestLoadA03(t *testing.T) {
 		os.WriteFile(p, []byte(text), 0600)
 		if _, err := Load(p, true); err == nil {
 			t.Errorf("accepted %q", text)
+		}
+	}
+}
+
+func TestMalformedConfigDoesNotEchoScalarValues(t *testing.T) {
+	name := filepath.Join(t.TempDir(), "config.yaml")
+	const secret = "token42"
+	for _, data := range []string{"github: " + secret, "local:\n  mappings: " + secret} {
+		if err := os.WriteFile(name, []byte(data), 0600); err != nil {
+			t.Fatal(err)
+		}
+		_, err := Load(name, true)
+		if err == nil || strings.Contains(err.Error(), secret) {
+			t.Fatalf("parser diagnostic leaked input: %v", err)
 		}
 	}
 }
