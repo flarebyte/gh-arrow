@@ -2,7 +2,7 @@
 
 A planned GitHub CLI extension to copy, display, and discover files in GitHub repositories and mapped local projects. The command will be `gh arrow`; the extension repository and executable will be named `gh-arrow`.
 
-**Status:** specification only. No executable or installable release exists yet. The hosted repository is currently `arrow-gha`; renaming it to `gh-arrow` is planned before publication.
+**Status:** specification only. No executable or installable release exists yet. The hosted repository is `gh-arrow`.
 
 Planned usage:
 
@@ -13,7 +13,7 @@ gh arrow ls 'github:owner:project:docs/**/*.md'
 gh arrow ls --org tools-org --topic cli README.md --json
 ```
 
-GitHub sources prefer configured local working trees. Other remote operations use GitHub CLI API access and its existing credentials, including accessible private repositories. Operations never prompt. Listings support sorted text or JSON; `cat` preserves raw bytes. See the [configuration example](doc/design-meta/examples/config.yaml).
+GitHub sources prefer configured local working trees. Other remote operations use GitHub CLI API access and its existing credentials, including accessible private repositories. Operations never prompt. Listings support sorted text or JSON; `cat` preserves raw bytes. The default `./config.yaml` is trusted local configuration: review it before running in an unfamiliar checkout, or select a trusted file with `--config`. See the [configuration example](doc/design-meta/examples/config.yaml).
 
 Read the [generated specification](doc/design/specification.md) for command contracts, requirements, acceptance scenarios, and open questions. The editable source lives in [doc/design-meta](doc/design-meta/AGENTS.md), assembled by [app.cue](doc/design-meta/app.cue). The [original proposal](doc/history/initial-spec.md) is historical.
 

@@ -94,7 +94,7 @@ export const discoveryExample: DiscoveryListing[] = [
 | extension | Use gh API access and existing gh credentials for remote operations; never manage tokens in arrow config. | D02 | Reuse GitHub CLI authentication for public and accessible private repositories. | accepted | No API authentication; public-only remote access; raw URL and web-page fallback. |
 | automation | Treat doc/design-meta as the specification source and generate doc/design/specification.md with flyb. | D03 | Support structured retrieval for agents and readable review for humans. | accepted | DECISIONS.md as the active specification. |
 | source | Prefer explicit local mappings; never fall back remotely after a mapped file is missing. | D04 | A local mapping deliberately selects the working tree. | accepted | Clarifies the original missing-local-file edge case. |
-| extension | Rename the hosted repository to gh-arrow before publishing an installable extension. | D05 | Match GitHub extension naming requirements. | planned | Hosted repository currently remains arrow-gha. |
+| extension | Use the current hosted repository name gh-arrow for the extension and executable. | D05 | The repository has been renamed to gh-arrow; align invocation with GitHub extension naming conventions. | accepted | Earlier plan to rename the hosted repository before publication. |
 
 #### Overview
 
@@ -102,7 +102,7 @@ gh-arrow is a planned Go extension invoked as `gh arrow`. It copies, displays an
 
 #### GitHub extension references
 
-Packaging follows [Creating GitHub CLI extensions](https://docs.github.com/en/github-cli/github-cli/creating-github-cli-extensions) and the [extension command manual](https://cli.github.com/manual/gh_extension). The repository target name is `gh-arrow`, the executable is `gh-arrow`, and the invocation is `gh arrow`. Hosted repository rename and release publication remain future implementation tasks.
+Packaging follows [Creating GitHub CLI extensions](https://docs.github.com/en/github-cli/github-cli/creating-github-cli-extensions) and the [extension command manual](https://cli.github.com/manual/gh_extension). The repository target name is `gh-arrow`, the executable is `gh-arrow`, and the invocation is `gh arrow`. The hosted repository is now `gh-arrow`; release publication remains a future implementation task.
 
 ## Requirements
 
@@ -125,6 +125,11 @@ Packaging follows [Creating GitHub CLI extensions](https://docs.github.com/en/gi
 | extension | Read using existing gh credentials; never request arrow-specific credentials. | A11 | Authenticated accessible private repository |
 | source | Reject access; never read outside the root. | A12 | Source traversal or symlink escaping mapped root |
 | automation | Identical sorted text and JSON outputs. | A13 | Repeated listing over unchanged fixtures |
+| files | Exit 1; preserve existing bytes and remove temporary files. | A14 | Failed transfer during cp --force; destination is a symlink; source and destination are the same file |
+| source | Reject without blocking or reading outside the mapped root. | A15 | Local source is a FIFO or a symlink component; a path is replaced by an escaping symlink during open |
+| source | Reject cat/cp sources; omit listing and discovery matches. | A16 | Remote path is a symlink or submodule |
+| discovery | Include the match through authenticated repository enumeration. | A17 | A user owns an accessible private repository containing the requested file |
+| automation | Escape controls in text; preserve the path value in valid JSON. | A18 | Listing path contains a newline or terminal escape character |
 
 #### Scope limits
 
@@ -141,21 +146,21 @@ Packaging follows [Creating GitHub CLI extensions](https://docs.github.com/en/gi
 
 | concept | id | requirement |
 | --- | --- | --- |
-| source | R01 | Accept github:<owner>:<repo>:<path> and local:<alias>:<path>; require nonempty identity segments. Paths use forward slashes; colon is reserved. Empty path is valid only for ls and means repository root. |
+| source | R01 | Accept github:<owner>:<repo>:<path> and local:<alias>:<path>; require nonempty identity segments and valid GitHub owner/repository names. Paths use forward slashes; colon is reserved. Empty path is valid only for ls and means repository root. |
 | source | R02 | Resolve github owner:repo through github.mappings first; otherwise use the GitHub API on github.com. Resolve local alias only through local.mappings. Do not infer identities from URLs. |
-| source | R03 | Remote operations use the repository default branch unless --ref is supplied. Read the selected ref consistently within one operation. |
-| source | R04 | Reject absolute source paths and parent traversal. Local resolution must remain within the mapped root after symlink resolution; skip symlinks in listings and reject symlink file sources. |
+| source | R03 | Remote operations use the repository default branch unless --ref is supplied. Resolve the selected ref to one commit before reading paths; use that commit throughout the operation. |
+| source | R04 | Reject absolute source paths and parent traversal. Local opens must enforce containment within the mapped root even if paths change concurrently. Reject symlink path components and nonregular file sources; skip symlinks and special files in listings. Remote reads and discovery must also exclude symlinks and submodules using Git tree entry types. |
 | config | R05 | Read ./config.yaml relative to the working directory unless --config overrides it. Missing default config means no mappings; missing explicit config is an error. Empty config means no mappings. |
-| config | R06 | Reject malformed YAML, unknown keys, duplicate repo mappings, empty identities and nonabsolute roots. Never write configuration at runtime. |
-| files | R07 | cp requires an existing destination parent; do not create directories. Reject directory sources and destinations. Preserve file bytes; report write errors without claiming success. |
+| config | R06 | Reject malformed YAML, duplicate YAML keys, unknown keys, duplicate repo mappings, empty identities and nonabsolute roots. Compare GitHub mapping identities case-insensitively. Never write configuration at runtime. |
+| files | R07 | cp requires an existing destination parent; do not create directories. Reject directory or special-file destinations, destination symlinks and copying a file onto itself. Stage complete bytes in a private temporary file beside the destination; publish only after successful transfer. Refusal without --force must be race-safe. Failed copies preserve any existing destination and remove temporary files. |
 | automation | R08 | cat emits raw bytes only. cp emits no stdout on success. Send diagnostics to stderr. |
 | files.list | R09 | ls outputs files only in lexicographic order with forward slashes and no headers or decoration. Paths are relative to the literal directory prefix before a glob; for a file operand return its basename. |
 | files.list | R10 | Support * within a filename and ** as a complete recursive directory segment; ** includes zero directories. Reject ?, bracket patterns and embedded **. Directory-segment wildcards other than ** are unsupported. |
 | files.list | R11 | A directory operand lists immediate files; a file operand lists that file. Empty directories and unmatched valid globs succeed with zero results; missing literal paths fail. Apply the same semantics locally and remotely. |
 | files.list | R12 | Use API directory/tree enumeration rather than scraping GitHub pages. Detect truncated responses; complete enumeration or return an explicit incomplete-results error. Skip submodules and symlinks. |
 | discovery | R13 | --org accepts an organization or user; enumerate all accessible repositories with pagination. Include archived repositories and forks; do not deduplicate forks. |
-| discovery | R14 | Filter by exact topic when provided and check an exact nonempty file path relative to each repository root on its default branch. Reject globs and directory operands. Do not fetch file contents. |
-| discovery | R15 | Organization discovery always checks remote repositories and ignores local mappings. Include accessible private repositories through gh credentials; inaccessible repositories cannot be guaranteed discoverable. |
+| discovery | R14 | Filter by exact topic when provided and check an exact nonempty file path relative to each repository root on its default branch. Reject globs. A directory at that path is a nonmatch for that repository. Do not fetch file contents. |
+| discovery | R15 | Organization discovery always checks remote repositories and ignores local mappings. Include accessible private repositories through gh credentials. For user owners combine public owner enumeration with authenticated accessible repository enumeration filtered to that owner; the public user endpoint alone is insufficient. Visibility remains limited by the active credentials. |
 | discovery | R16 | For discovery output owner/repo:path one per line sorted by owner/repo then path. No matches succeeds with empty output. |
 | automation | R17 | Never prompt or launch a browser during file operations. If authentication is needed, fail with guidance to run gh auth login separately. Do not expose credentials in diagnostics. |
 | automation | R18 | ls --json returns a JSON array of records as defined in listing.ts; empty result is []. Reject --json for cat and cp to protect byte-stream semantics. |
@@ -163,4 +168,7 @@ Packaging follows [Creating GitHub CLI extensions](https://docs.github.com/en/gi
 | automation | R20 | On enumeration failure return nonzero with no success listing on stdout; diagnostics identify the failing operation. Report rate limits without silently skipping repositories. |
 | automation | R21 | Use human-readable stderr messages prefixed by stable error codes: ARROW_USAGE, ARROW_CONFIG, ARROW_NOT_FOUND, ARROW_EXISTS, ARROW_PERMISSION, ARROW_AUTH, ARROW_NETWORK, ARROW_RATE_LIMIT, ARROW_INCOMPLETE, ARROW_IO. |
 | extension | R22 | Build a gh-arrow executable and publish precompiled release assets following GitHub CLI platform naming conventions. Document local build and gh extension install . once implementation exists. |
+| source | R23 | Use GitHub.com explicitly for remote API access through gh credentials. Encode path and ref values as data; never interpolate them into shell commands. Never forward credentials to unrelated redirect hosts. |
+| automation | R24 | Escape control characters in text listings and diagnostics so each result occupies one line. JSON preserves path values using JSON escaping. cat remains an unmodified byte stream; a failed stream may contain partial bytes and must exit nonzero. |
+| automation | R25 | Use bounded request timeouts, retries and concurrency; support cancellation. API size or enumeration limits must produce a clear nonzero error unless a supported fallback completes the operation. Never silently truncate file bytes or listing results. |
 

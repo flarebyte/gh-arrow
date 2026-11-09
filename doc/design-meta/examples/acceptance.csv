@@ -12,3 +12,8 @@ A10,Discovery operand refers to a directory,Do not report a file match.,discover
 A11,Authenticated accessible private repository,Read using existing gh credentials; never request arrow-specific credentials.,extension
 A12,Source traversal or symlink escaping mapped root,Reject access; never read outside the root.,source
 A13,Repeated listing over unchanged fixtures,Identical sorted text and JSON outputs.,automation
+A14,Failed transfer during cp --force; destination is a symlink; source and destination are the same file,Exit 1; preserve existing bytes and remove temporary files.,files
+A15,Local source is a FIFO or a symlink component; a path is replaced by an escaping symlink during open,Reject without blocking or reading outside the mapped root.,source
+A16,Remote path is a symlink or submodule,Reject cat/cp sources; omit listing and discovery matches.,source
+A17,A user owns an accessible private repository containing the requested file,Include the match through authenticated repository enumeration.,discovery
+A18,Listing path contains a newline or terminal escape character,Escape controls in text; preserve the path value in valid JSON.,automation
