@@ -36,3 +36,6 @@ go.work.sum
 /.gomodcache/
 /build/
 /gh-arrow
+
+# Python tooling
+__pycache__/

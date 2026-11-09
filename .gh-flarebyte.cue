@@ -124,6 +124,6 @@ release: {
 	tagPrefix:        "v"
 	notesMode:        "generate-notes"
 	includeArtifacts: true
-	artifactDir:      "build"
+	artifactDir:      "build/release"
 	includeChecksums: true
 }

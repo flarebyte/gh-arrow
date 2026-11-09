@@ -26,26 +26,30 @@ sh scripts/doc-design.sh
 
 Commit both the sources and generated Markdown. AI agents should start with [AGENTS.md](AGENTS.md) and retrieve only the relevant concept records.
 
-Local development requires Go 1.24 or newer, GitHub CLI, and the `gh flarebyte` extension. From the repository root:
+Local development requires Go 1.24+, Python 3.11+, Make, GitHub CLI, and `gh flarebyte` v0.24.0 (the version pinned in CI). Install the tooling once, then run checks from the repository root:
 
 ```sh
-gh flarebyte config validate
-gh flarebyte format
-gh flarebyte lint
-gh flarebyte test
-gh flarebyte build
-./build/gh-arrow-darwin-arm64 --help
+gh extension install flarebyte/gh-flarebyte --pin v0.24.0
+make check-tools
+make review
+make build
 ```
 
-Choose the binary matching your platform; the initial build targets are `darwin-arm64`, `linux-amd64`, and `windows-amd64`. These are scaffold targets, not a release support guarantee. There are no tests yet. The project currently uses only the Go standard library.
+`make help` lists the targets. `make test` runs the release-tooling tests and CLI smoke checks as well as the Go test command; there are no Go test cases yet. The Go executable uses only the standard library. `make coverage` reports Go coverage separately.
 
-For a local extension installation, build the root executable first:
+The initial build targets are `darwin-arm64`, `linux-amd64`, and `windows-amd64`. These are scaffold targets, not a release support guarantee. For a local extension installation:
 
 ```sh
-GOCACHE="$PWD/.gocache" GOMODCACHE="$PWD/.gomodcache" go build -o gh-arrow ./cmd/gh-arrow
+make build-go
 gh extension install .
 gh arrow --help
 ```
+
+Pull requests and pushes to `main` run formatting, config/CSV validation, lint, tests, smoke checks, and cross-platform builds in [CI](.github/workflows/ci.yml). `make doc-design` additionally requires flyb to regenerate the specification.
+
+Publishing uses the manually dispatched [release workflow](.github/workflows/release.yml). Before the first release, implement the intended commands and replace `0.0.0-dev` in `main.project.yaml` with the chosen release version. Preflight blocks that scaffold version and existing tags/releases. The workflow verifies the default-branch commit, builds and checksums assets, then publishes those same assets with write permission confined to the publishing job. Prerelease versions are marked as prereleases. `make build-release` stages assets locally in `build/release` and refuses an existing staging directory; use a clean checkout for each release build. It does not publish.
+
+Build version injection and a CLI `--version` remain future work: flarebyte v0.24.0 hardcodes its own metadata package in linker flags. No release has been published by this setup.
 
 The entry point is `cmd/gh-arrow/main.go`. Development and build settings live in `.gh-flarebyte.cue`; `main.project.yaml` holds the development version. Build outputs and Go caches are ignored. Repository sync and release publication are separate actions; local setup does not require either.
 
