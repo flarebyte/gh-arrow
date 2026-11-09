@@ -1,3 +1,4 @@
+# Roots must be absolute on the local OS; use C:/work/project on Windows.
 github:
   mappings:
     - repo: owner:project

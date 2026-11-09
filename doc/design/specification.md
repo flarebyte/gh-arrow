@@ -17,10 +17,12 @@ Generated from doc/design-meta; edit the source and regenerate.
 | Show syntax and copyable examples without network access. | automation | C05 | gh arrow <command> --help |
 | Override the default ./config.yaml mapping file. | config | C06 | gh arrow <command> --config <path> |
 | Select a remote branch tag or commit; reject for mapped sources and organization discovery in v1. | source | C07 | gh arrow <command> --ref <ref> |
+| Report the embedded project version and available commit metadata without config or network access. | extension | C08 | gh arrow --version |
 
 #### Mapping configuration
 
 ```yaml
+# Roots must be absolute on the local OS; use C:/work/project on Windows.
 github:
   mappings:
     - repo: owner:project
@@ -78,8 +80,8 @@ export const discoveryExample: DiscoveryListing[] = [
 
 | concept | id | question | status |
 | --- | --- | --- | --- |
-| extension | Q01 | Which Go and gh minimum versions and release OS/architecture targets should be supported? | Resolve during implementation setup. |
-| discovery | Q02 | Which bounded concurrency and retry limits should discovery use? | Resolve with API rate-limit fixtures before release. |
+| extension | Q01 | Which Go and gh minimum versions and release OS/architecture targets should be supported? | Initial implementation: Go 1.25 language minimum with Go 1.27.3 toolchain; gh 2.103.3 tested baseline; linux-amd64, darwin-arm64 and windows-amd64 targets gated by native CI before publication. |
+| discovery | Q02 | Which bounded concurrency and retry limits should discovery use? | Resolved: four workers; 30-second requests; two retries for network/5xx failures; no rate-limit retry. Finite metadata and traversal limits are documented in TECHNICAL_DESIGN.md. |
 | automation | Q03 | Should future versions support GitHub Enterprise hosts and richer structured error output? | Deferred beyond v1. |
 
 ## Overview
@@ -91,14 +93,14 @@ export const discoveryExample: DiscoveryListing[] = [
 | concept | decision | id | rationale | status | supersedes |
 | --- | --- | --- | --- | --- | --- |
 | extension | Build a Go GitHub CLI extension named gh-arrow; invoke as gh arrow. | D01 | Use the gh extension lifecycle and a familiar command entry point. | accepted | Independent gha binary and arrow-gha product name. |
-| extension | Use gh API access and existing gh credentials for remote operations; never manage tokens in arrow config. | D02 | Reuse GitHub CLI authentication for public and accessible private repositories. | accepted | No API authentication; public-only remote access; raw URL and web-page fallback. |
+| extension | Use the GitHub API with existing gh credentials obtained through gh auth token; never manage tokens in arrow config. | D02 | Reuse GitHub CLI authentication for public and accessible private repositories. | accepted | No API authentication; public-only remote access; raw URL and web-page fallback. |
 | automation | Treat doc/design-meta as the specification source and generate doc/design/specification.md with flyb. | D03 | Support structured retrieval for agents and readable review for humans. | accepted | DECISIONS.md as the active specification. |
 | source | Prefer explicit local mappings; never fall back remotely after a mapped file is missing. | D04 | A local mapping deliberately selects the working tree. | accepted | Clarifies the original missing-local-file edge case. |
 | extension | Use the current hosted repository name gh-arrow for the extension and executable. | D05 | The repository has been renamed to gh-arrow; align invocation with GitHub extension naming conventions. | accepted | Earlier plan to rename the hosted repository before publication. |
 
 #### Overview
 
-gh-arrow is a planned Go extension invoked as `gh arrow`. It copies, displays and lists files from GitHub or mapped local working trees, and discovers files across organizations or users. This repository contains specifications and a minimal Go scaffold; only `--help` is implemented. The original proposal is preserved in `doc/history/initial-spec.md`; decisions below explicitly replace its standalone name and public-only remote authentication restrictions.
+gh-arrow is a Go extension invoked as `gh arrow`. It copies, displays and lists files from GitHub or mapped local working trees, and discovers files across organizations or users. File commands and discovery are implemented with offline acceptance tests and native CI verification; no release has been published. The original proposal is preserved in `doc/history/initial-spec.md`; decisions below explicitly replace its standalone name and public-only remote authentication restrictions.
 
 #### GitHub extension references
 
@@ -130,6 +132,7 @@ Packaging follows [Creating GitHub CLI extensions](https://docs.github.com/en/gi
 | source | Reject cat/cp sources; omit listing and discovery matches. | A16 | Remote path is a symlink or submodule |
 | discovery | Include the match through authenticated repository enumeration. | A17 | A user owns an accessible private repository containing the requested file |
 | automation | Escape controls in text; preserve the path value in valid JSON. | A18 | Listing path contains a newline or terminal escape character |
+| extension | Exit 0 with embedded project version; do not read runtime config or credentials. | A19 | Version requested with an absent explicit config and no network access |
 
 #### Scope limits
 

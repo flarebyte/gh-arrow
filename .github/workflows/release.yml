@@ -11,7 +11,11 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  native:
+    uses: ./.github/workflows/native.yml
+
   verify:
+    needs: native
     name: Preflight, lint, tests, and release artifacts
     runs-on: ubuntu-24.04
     timeout-minutes: 20

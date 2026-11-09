@@ -17,3 +17,4 @@ A15,Local source is a FIFO or a symlink component; a path is replaced by an esca
 A16,Remote path is a symlink or submodule,Reject cat/cp sources; omit listing and discovery matches.,source
 A17,A user owns an accessible private repository containing the requested file,Include the match through authenticated repository enumeration.,discovery
 A18,Listing path contains a newline or terminal escape character,Escape controls in text; preserve the path value in valid JSON.,automation
+A19,Version requested with an absent explicit config and no network access,Exit 0 with embedded project version; do not read runtime config or credentials.,extension

@@ -14,6 +14,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  native:
+    uses: ./.github/workflows/native.yml
+
   check:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -38,4 +41,4 @@ jobs:
           make format
           git diff --exit-code -- '*.go'
       - name: Validate, lint, test, and build
-        run: make lint test validate-design build-dist
+        run: make lint test test-race validate-design build-dist

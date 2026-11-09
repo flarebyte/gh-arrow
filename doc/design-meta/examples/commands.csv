@@ -6,3 +6,4 @@ C04,gh arrow ls --org <owner> [--topic <topic>] <path> [--json],Find an exact re
 C05,gh arrow <command> --help,Show syntax and copyable examples without network access.,automation
 C06,gh arrow <command> --config <path>,Override the default ./config.yaml mapping file.,config
 C07,gh arrow <command> --ref <ref>,Select a remote branch tag or commit; reject for mapped sources and organization discovery in v1.,source
+C08,gh arrow --version,Report the embedded project version and available commit metadata without config or network access.,extension
