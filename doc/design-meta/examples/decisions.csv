@@ -1,0 +1,6 @@
+id,status,decision,rationale,supersedes,concept
+D01,accepted,Build a Go GitHub CLI extension named gh-arrow; invoke as gh arrow.,Use the gh extension lifecycle and a familiar command entry point.,Independent gha binary and arrow-gha product name.,extension
+D02,accepted,Use gh API access and existing gh credentials for remote operations; never manage tokens in arrow config.,Reuse GitHub CLI authentication for public and accessible private repositories.,No API authentication; public-only remote access; raw URL and web-page fallback.,extension
+D03,accepted,Treat doc/design-meta as the specification source and generate doc/design/specification.md with flyb.,Support structured retrieval for agents and readable review for humans.,DECISIONS.md as the active specification.,automation
+D04,accepted,Prefer explicit local mappings; never fall back remotely after a mapped file is missing.,A local mapping deliberately selects the working tree.,Clarifies the original missing-local-file edge case.,source
+D05,planned,Rename the hosted repository to gh-arrow before publishing an installable extension.,Match GitHub extension naming requirements.,Hosted repository currently remains arrow-gha.,extension

@@ -1,0 +1,7 @@
+id,requirement,concept
+N01,"No cloning, recursive directory copy, file content cache, or configuration writes.",files
+N02,"No archive inspection, binary introspection, full-text search, metadata filtering, or special case-insensitive filesystem handling. Binary files remain copyable and displayable as bytes.",files
+N03,No custom credential store or authentication flow; use gh credentials. No GitHub Enterprise host support in v1.,extension
+N04,"Discovery does not support recursive globs, license or star filters, or fork deduplication.",discovery
+N05,Remote results reflect API observations and are not guaranteed real-time snapshots across repositories.,discovery
+N06,Never overwrite an existing destination without --force. No interactive overwrite confirmation.,automation
