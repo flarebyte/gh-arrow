@@ -1,8 +1,9 @@
-# Implementation guide
+# Technical design
 
 The [specification](doc/design/specification.md) defines command behavior. Tests
 reference its acceptance IDs (A01–A19); changes should begin with a failing test.
-The commands are implemented, but no release has been published.
+The commands are implemented; see the [README](README.md) for release status and
+[Contributing](CONTRIBUTING.md) for setup and check commands.
 
 ## Boundaries
 
@@ -26,9 +27,21 @@ backends expose open, stat, and list operations. Discovery belongs to the GitHub
 backend and deliberately bypasses local mappings. Avoid adding a service layer
 or interface for every concrete type.
 
+## Execution flow
+
+The entry point creates a signal-aware context and passes process streams to
+`internal/cli.Runner`. The runner validates arguments before reading configuration
+or credentials; help/version return without either. For file commands, explicit
+mappings select the local backend, otherwise GitHub identities select the remote
+backend. Discovery always uses GitHub. The selected backend supplies bytes or
+entries; the CLI renders results and maps errors to stable codes and exit status.
+
+New command wiring belongs in `internal/cli`, backend operations in their owning
+packages, and shared pattern/output rules in `internal/listing`. Keep tests next
+to those boundaries and reference acceptance scenarios when behavior changes.
+
 ## Safety and consistency
 
-Validate arguments before reading config or credentials; help needs neither.
 Mappings select local working trees permanently for that operation, including
 when a file is missing. GitHub identity matching in mappings is case-insensitive.
 
@@ -49,10 +62,9 @@ Remote operations obtain credentials from gh once and send them only to fixed
 GitHub.com HTTPS endpoints. Redirects are refused; HTTP response bodies and
 credentials are never included in diagnostics. Public reads can run without a
 stored token. Authentication errors guide the user to run `gh auth login`
-separately. Resolve the selected branch/tag/ref to one commit tree using the metadata-only
-commit-list endpoint before reads; the single-commit endpoint can include file
-diffs and is deliberately avoided.
-Inspect Git tree entry modes to exclude symlinks and submodules; fetch file bytes
+separately. Resolve the selected branch/tag/ref to one commit tree using the
+metadata-only commit-list endpoint before reads; the single-commit endpoint can
+include file diffs and is deliberately avoided. Inspect Git tree entry modes to exclude symlinks and submodules; fetch file bytes
 through the raw Git blob API rather than the Contents API's symlink behavior.
 
 Directory and discovery results are collected and sorted before stdout is
@@ -79,16 +91,15 @@ rather than being silently rewritten in JSON.
 
 ## Verification
 
-Run `make review`, `make test-race`, `make coverage`, and `make build` locally.
-Source/glob fuzz targets use Go's native fuzzing. `make sec` downloads the pinned
-checker and advisory data; CI scans each native platform, since a host-only scan
-cannot assess Windows-only calls. Native CI also runs the unit tests and Python
-executable smoke checks on Linux, macOS, and Windows.
+See [Contributing](CONTRIBUTING.md#check-a-change) for local commands and CI
+coverage. Source/glob fuzz targets use Go's native fuzzing. Native CI runs unit
+and executable smoke tests on all configured platforms; a host-only vulnerability
+scan cannot assess Windows-only calls.
 
 Unit tests replace HTTP transport and credential lookup with fixtures. They
 cover binary bytes, deterministic output, error classification, pagination,
 private discovery, symlinks, FIFOs, concurrent replacement, and failed transfers.
-No normal test accesses GitHub or the user's real credentials. Before publication,
-separately verify a real accessible private repository with explicit authorization.
+Normal tests do not access GitHub or the user's real credentials. Real private
+access is an opt-in check in the [release checklist](doc/releasing.md#prepare-the-candidate).
 
 Enterprise hosts remain outside v1.

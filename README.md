@@ -40,40 +40,11 @@ Remote access uses GitHub.com and existing gh credentials. For private repositor
 
 `cat` writes exact bytes, with no added newline. Successful `cp` writes no stdout. Listings are sorted; text escapes control characters, while `--json` preserves Unicode path values. JSON listings are arrays, including `[]` for no matches; discovery records additionally contain `repository`. Diagnostics go to stderr with stable `ARROW_*` codes. Exit status is 0 for success, 1 for I/O/network/authentication failures, and 2 for invalid arguments or configuration.
 
-## Development
+## Documentation
 
-In addition to the tools above, development checks require Python 3.11+ and `gh flarebyte` v0.24.0:
+- [Contributing](CONTRIBUTING.md): development setup, checks, tests, and specification changes.
+- [Technical design](TECHNICAL_DESIGN.md): code boundaries, safety guarantees, and runtime limits.
+- [Specification](doc/design/specification.md): command contracts and acceptance scenarios.
+- [Documentation index](doc/README.md): design sources, decisions, publishing, and history.
 
-```sh
-gh extension install flarebyte/gh-flarebyte --pin v0.24.0
-make check-tools
-make review
-make test-race
-make coverage
-make build
-```
-
-`make help` lists targets. `make test` runs Go tests, release-tooling tests, and offline executable smoke checks. `make sec` downloads the pinned vulnerability checker and advisory data. YAML parsing and platform filesystem calls are the only direct Go dependencies. Build outputs and local Go caches are ignored.
-
-The [CI workflow](.github/workflows/ci.yml) validates formatting, config/CSV inputs, lint, tests, and cross-platform builds. [Native checks](.github/workflows/native.yml) run filesystem tests, smoke checks, and vulnerability scans on Linux, macOS, and Windows. Normal tests use fixtures and never require real GitHub credentials or network access.
-
-The entry point is `cmd/gh-arrow/main.go`. See [TECHNICAL_DESIGN.md](TECHNICAL_DESIGN.md) for package boundaries, safety guarantees, runtime limits, and testing guidance. Development and build settings live in `.gh-flarebyte.cue`. The version in `main.project.yaml` is embedded in the executable; `--version` also reports available Git commit metadata without runtime config or network access.
-
-## Specification
-
-Read the [generated specification](doc/design/specification.md) for command contracts and acceptance scenarios. Edit [doc/design-meta](doc/design-meta/AGENTS.md), then regenerate from the repository root:
-
-```sh
-# Requires Python 3 and flyb on PATH.
-make doc-design
-```
-
-Commit source inputs and generated Markdown together. AI agents should start with [AGENTS.md](AGENTS.md). The [original proposal](doc/history/initial-spec.md) is historical.
-
-## Publishing
-
-Publishing is a separate, manually dispatched [release workflow](.github/workflows/release.yml). Commit and merge the reviewed code and chosen version to the default branch, require successful native checks, and perform an opt-in test against an accessible private repository before publication. Local builds do not publish anything or sync repository settings.
-
-Preflight validates SemVer and refuses existing tags/releases. The workflow builds and checksums assets, verifies them again after transfer, and publishes from the tested commit. Write permission is confined to the publishing job. Prerelease versions such as this alpha are marked as GitHub prereleases. `make build-release` stages verified assets locally in `build/release` and refuses an existing staging directory; use a clean checkout for each release build.
-
-If publishing is interrupted, follow the [release recovery procedure](doc/release-recovery.md) before retrying. Packaging follows GitHub's [extension conventions](https://docs.github.com/en/github-cli/github-cli/creating-github-cli-extensions).
+AI agents should start with [AGENTS.md](AGENTS.md). This project includes an [MIT license](LICENSE).

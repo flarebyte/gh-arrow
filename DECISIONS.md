@@ -1,9 +1,12 @@
-# Design specification
+# Design decisions
 
-The active specification has moved to [doc/design-meta/app.cue](doc/design-meta/app.cue) and its structured inputs. Read the [generated specification](doc/design/specification.md) for the complete design and decision table.
+The active [decision records](doc/design-meta/examples/decisions.csv) live in
+`doc/design-meta` and appear in the [generated specification](doc/design/specification.md#design-decisions).
+This file preserves the existing documentation entry point; do not maintain a
+second decision table here.
 
-The target is now a Go GitHub CLI extension named `gh-arrow`, invoked as `gh arrow`. Remote access reuses GitHub CLI credentials, superseding the original public-only and no-authentication constraints. The hosted repository is now `gh-arrow`; release publication remains a future task.
-
-The complete initial proposal is preserved in [doc/history/initial-spec.md](doc/history/initial-spec.md) for provenance. It is historical, including its `gha` commands, raw URL and web listing fallbacks, and authentication exclusions. Resolve conflicts using the active specification.
-
-Edit the source tables and regenerate with `sh scripts/doc-design.sh`; do not maintain a second specification here.
+Follow [Contributing](CONTRIBUTING.md#update-the-specification-and-docs) to change
+the source and regenerate Markdown. The [initial proposal](doc/history/initial-spec.md)
+is historical; its standalone name, raw URL/web listing fallbacks, and exclusions
+of authenticated access are superseded by the current records. See the
+[documentation map](doc/README.md) for the other guides.
