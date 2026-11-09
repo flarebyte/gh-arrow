@@ -45,9 +45,11 @@ gh extension install .
 gh arrow --help
 ```
 
+CI and release builds use Go 1.27.3; `go.mod` retains Go 1.24 as the minimum language version. Use a supported, patched Go toolchain for local development.
+
 Pull requests and pushes to `main` run formatting, config/CSV validation, lint, tests, smoke checks, and cross-platform builds in [CI](.github/workflows/ci.yml). `make doc-design` additionally requires flyb to regenerate the specification.
 
-Publishing uses the manually dispatched [release workflow](.github/workflows/release.yml). Before the first release, implement the intended commands and replace `0.0.0-dev` in `main.project.yaml` with the chosen release version. Preflight blocks that scaffold version and existing tags/releases. The workflow verifies the default-branch commit, builds and checksums assets, then publishes those same assets with write permission confined to the publishing job. Prerelease versions are marked as prereleases. `make build-release` stages assets locally in `build/release` and refuses an existing staging directory; use a clean checkout for each release build. It does not publish.
+Publishing uses the manually dispatched [release workflow](.github/workflows/release.yml). Before the first release, implement the intended commands and replace `0.0.0-dev` in `main.project.yaml` with the chosen release version. Preflight blocks that scaffold version and existing tags/releases. If publishing fails after tag creation, follow the [release recovery procedure](doc/release-recovery.md) before retrying. The workflow verifies the default-branch commit, builds and checksums assets, then publishes those same assets with write permission confined to the publishing job. Prerelease versions are marked as prereleases. `make build-release` stages assets locally in `build/release` and refuses an existing staging directory; use a clean checkout for each release build. It does not publish.
 
 Build version injection and a CLI `--version` remain future work: flarebyte v0.24.0 hardcodes its own metadata package in linker flags. No release has been published by this setup.
 
