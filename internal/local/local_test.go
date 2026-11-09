@@ -66,6 +66,41 @@ func TestReadAndListA01A07A12(t *testing.T) {
 	}
 }
 
+// Regression for PR #3's Windows failure: NT relative opens reject a literal
+// dot for the root. Repeated listings must also have independent read cursors.
+func TestRootDirectoryListingRegressionPR3(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "root.txt"), []byte("root"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(filepath.Join(root, "docs"), 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "docs", "guide.md"), []byte("guide"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	b, err := New(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer b.Close()
+	ctx := context.Background()
+	for _, name := range []string{".", "", "./", "."} {
+		entry, err := b.Stat(ctx, name)
+		if err != nil || entry.Kind != listing.Directory {
+			t.Fatalf("stat %q: %+v %v", name, entry, err)
+		}
+		entries, err := b.List(ctx, name, false)
+		if err != nil || !reflect.DeepEqual(entries, []listing.Entry{{Path: "root.txt", Kind: listing.File}}) {
+			t.Fatalf("list %q: %+v %v", name, entries, err)
+		}
+	}
+	entries, err := b.List(ctx, "docs", false)
+	if err != nil || !reflect.DeepEqual(entries, []listing.Entry{{Path: "docs/guide.md", Kind: listing.File}}) {
+		t.Fatalf("nested listing: %+v %v", entries, err)
+	}
+}
+
 func TestConcurrentNoClobberA05(t *testing.T) {
 	destination := filepath.Join(t.TempDir(), "out")
 	start := make(chan struct{})

@@ -48,8 +48,10 @@ CSV validation, including when Make runs in parallel. `make help` lists targets.
 
 [CI](.github/workflows/ci.yml) also verifies that formatting leaves tracked Go
 files unchanged. [Native checks](.github/workflows/native.yml) run tests, smoke
-checks, and vulnerability scans on Linux, macOS, and Windows. Cross-compilation
-alone does not replace native filesystem tests.
+checks, and vulnerability scans on Linux and macOS. Windows checks are limited
+to regressions linked to confirmed implementation bugs, currently PR #3's root
+listing failures. Windows artifacts remain cross-built; this does not establish
+full native Windows validation.
 
 ## Write tests first
 

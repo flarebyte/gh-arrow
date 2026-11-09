@@ -93,8 +93,10 @@ rather than being silently rewritten in JSON.
 
 See [Contributing](CONTRIBUTING.md#check-a-change) for local commands and CI
 coverage. Source/glob fuzz targets use Go's native fuzzing. Native CI runs unit
-and executable smoke tests on all configured platforms; a host-only vulnerability
-scan cannot assess Windows-only calls.
+and executable smoke tests on Linux/macOS. Windows CI is restricted to targeted
+regressions for confirmed implementation bugs (PR #3: NT relative root opens).
+Windows artifacts remain cross-built; full native tests and vulnerability scans
+are not Windows gates.
 
 Unit tests replace HTTP transport and credential lookup with fixtures. They
 cover binary bytes, deterministic output, error classification, pagination,

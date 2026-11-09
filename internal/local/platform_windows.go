@@ -10,6 +10,11 @@ import (
 )
 
 func openHandle(root *os.File, name string, access uint32) (windows.Handle, error) {
+	// NT uses an empty relative object name to reopen the pinned directory.
+	// A literal dot is invalid here (PR #3); match Go's own rooted-open logic.
+	if name == "." {
+		name = ""
+	}
 	object, err := windows.NewNTUnicodeString(filepath.FromSlash(name))
 	if err != nil {
 		return 0, err

@@ -10,7 +10,9 @@ anything. The [README](../README.md) records the current candidate status.
    `project.go` embeds this file, so `--version` and the release workflow use the
    same version source.
 2. Review the code and documentation, run the contributor checks, and require
-   successful native checks on the configured platforms. Perform an opt-in
+   successful Linux/macOS native checks and any Windows regressions tied to
+   confirmed implementation bugs. Windows artifacts are cross-built without a
+   blanket Windows test/security/smoke gate. Perform an opt-in
    check against a real accessible private repository before first publication.
 3. Commit and merge the reviewed code and version to the default branch. The
    release workflow refuses other branches.

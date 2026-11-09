@@ -16,7 +16,7 @@ gh arrow --help
 gh arrow cat github:flarebyte:gh-arrow:README.md
 ```
 
-This installs a local development extension. The configured build targets are `darwin-arm64`, `linux-amd64`, and `windows-amd64`; native tests must pass before publishing support for them.
+This installs a local development extension. The configured build targets are `darwin-arm64`, `linux-amd64`, and `windows-amd64`. Full native CI runs on Linux/macOS; Windows is cross-built with only targeted regressions for confirmed implementation bugs, not a general native validation gate.
 
 ## Usage
 
