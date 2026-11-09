@@ -3,11 +3,11 @@
 GO := go
 PYTHON := python3
 FLAREBYTE := gh flarebyte
-export GOTOOLCHAIN := local
+export GOTOOLCHAIN := auto
 export GOCACHE := $(CURDIR)/.gocache
 export GOMODCACHE := $(CURDIR)/.gomodcache
 
-.PHONY: help check-tools install-tools-help config format lint test test-go test-scripts smoke coverage review build build-go build-dist build-release doc-design validate-design
+.PHONY: help check-tools install-tools-help config format lint test test-go test-race test-scripts smoke coverage review build build-go build-dist build-release doc-design validate-design sec
 
 config: ## Validate the flarebyte configuration.
 	$(FLAREBYTE) config validate
@@ -23,14 +23,20 @@ test: test-go test-scripts smoke ## Run Go, release-tooling, and CLI smoke check
 test-go: ## Run configured Go tests.
 	$(FLAREBYTE) test
 
+test-race: ## Run Go tests with the race detector.
+	$(GO) test -race ./...
+
 test-scripts: ## Test release preflight and artifact staging offline.
 	$(PYTHON) -m unittest discover -s scripts -p 'test_*.py'
 
-smoke: build-go ## Check help and scaffold failure behavior.
+smoke: build-go ## Check offline help, binary file operations, and listings.
 	$(PYTHON) scripts/smoke.py ./gh-arrow
 
 coverage: ## Report Go coverage.
 	$(FLAREBYTE) cov
+
+sec: ## Check reachable Go vulnerabilities (downloads the pinned checker and advisory data).
+	GOTOOLCHAIN="$$($(GO) env GOVERSION)" $(GO) run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
 
 # Formatting must finish before checks, including under make -j.
 review: ## Format, validate, lint, and test locally.
@@ -58,7 +64,7 @@ check-tools: ## Report availability of development tools.
 	@sh scripts/check-tools.sh
 
 install-tools-help: ## Show tool setup guidance without installing anything.
-	@printf '%s\n' 'Go 1.24+: https://go.dev/doc/install' 'GitHub CLI: https://cli.github.com/' 'gh extension install flarebyte/gh-flarebyte --pin v0.24.0' 'Python 3.11+: https://www.python.org/downloads/' 'flyb (documentation generation): install the flyb CLI.'
+	@printf '%s\n' 'Go 1.25+ (module toolchain: 1.27.3): https://go.dev/doc/install' 'GitHub CLI: https://cli.github.com/' 'gh extension install flarebyte/gh-flarebyte --pin v0.24.0' 'Python 3.11+: https://www.python.org/downloads/' 'flyb (documentation generation): install the flyb CLI.'
 
 help: ## Show available targets.
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z0-9_.-]+:.*## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)

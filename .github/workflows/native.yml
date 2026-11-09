@@ -1,0 +1,71 @@
+name: Native command tests
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Native tests / ${{ matrix.runner }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            binary: build/native/gh-arrow
+          - runner: macos-15
+            binary: build/native/gh-arrow
+    env:
+      GOTOOLCHAIN: local
+      GOCACHE: ${{ github.workspace }}/.gocache
+      GOMODCACHE: ${{ github.workspace }}/.gomodcache
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Test native filesystem behavior
+        run: go test ./...
+      - name: Check vulnerabilities for this platform
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+      - name: Build and smoke-test commands
+        shell: bash
+        env:
+          BINARY: ${{ matrix.binary }}
+        run: |
+          go build -o "$BINARY" ./cmd/gh-arrow
+          python scripts/smoke.py "$BINARY"
+
+  # Windows has no blanket native/security/smoke gate. Retain only regressions
+  # tied to demonstrated implementation bugs: PR #3's rejected NT root opens.
+  windows-regression:
+    name: Windows regression / root listings (PR 3)
+    runs-on: windows-2025
+    timeout-minutes: 10
+    env:
+      GOTOOLCHAIN: local
+      GOCACHE: ${{ github.workspace }}/.gocache
+      GOMODCACHE: ${{ github.workspace }}/.gomodcache
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - name: Regress the Windows root-open and affected listing bugs
+        shell: bash
+        run: |
+          go test ./internal/local -run '^(TestRootDirectoryListingRegressionPR3|TestReadAndListA01A07A12)$' -count=1
+          go test ./internal/cli -run '^TestLocalCommandsAndNoFallbackA01A02A13$' -count=1

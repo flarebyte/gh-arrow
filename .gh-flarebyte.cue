@@ -109,7 +109,7 @@ build: {
 go: {
 	cacheDir:    "./.gocache"
 	modCacheDir: "./.gomodcache"
-	toolchain:   "local"
+	toolchain:   "auto"
 	cgo: enabled: false
 }
 

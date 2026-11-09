@@ -1,58 +1,50 @@
 # gh-arrow
 
-A planned GitHub CLI extension to copy, display, and discover files in GitHub repositories and mapped local projects. The command will be `gh arrow`; the extension repository and executable will be named `gh-arrow`.
+A Go GitHub CLI extension to copy, display, and discover files in GitHub repositories and mapped local projects. Invoke it as `gh arrow`.
 
-**Status:** Go scaffold only. The executable supports `--help`; file operations are not implemented and no installable release has been published. The hosted repository is `gh-arrow`.
+**Version:** `0.1.0-alpha.1`, an unreleased alpha candidate. No installable release has been published. The commands are implemented and covered by offline tests; native platform checks are configured in CI.
 
-Planned usage:
+## Try it from a checkout
 
-```sh
-gh arrow cp github:owner:project:path/to/file.yaml ./local.yaml
-gh arrow cat local:project2:file.md
-gh arrow ls 'github:owner:project:docs/**/*.md'
-gh arrow ls --org tools-org --topic cli README.md --json
-```
-
-GitHub sources prefer configured local working trees. Other remote operations use GitHub CLI API access and its existing credentials, including accessible private repositories. Operations never prompt. Listings support sorted text or JSON; `cat` preserves raw bytes. The default `./config.yaml` is trusted local configuration: review it before running in an unfamiliar checkout, or select a trusted file with `--config`. See the [configuration example](doc/design-meta/examples/config.yaml).
-
-Read the [generated specification](doc/design/specification.md) for command contracts, requirements, acceptance scenarios, and open questions. The editable source lives in [doc/design-meta](doc/design-meta/AGENTS.md), assembled by [app.cue](doc/design-meta/app.cue). The [original proposal](doc/history/initial-spec.md) is historical.
-
-To update the design, edit its sources and regenerate from the repository root:
-
-```sh
-# Requires Python 3 and flyb on PATH.
-sh scripts/doc-design.sh
-```
-
-Commit both the sources and generated Markdown. AI agents should start with [AGENTS.md](AGENTS.md) and retrieve only the relevant concept records.
-
-Local development requires Go 1.24+, Python 3.11+, Make, GitHub CLI, and `gh flarebyte` v0.24.0 (the version pinned in CI). Install the tooling once, then run checks from the repository root:
-
-```sh
-gh extension install flarebyte/gh-flarebyte --pin v0.24.0
-make check-tools
-make review
-make build
-```
-
-`make help` lists the targets. `make test` runs the release-tooling tests and CLI smoke checks as well as the Go test command; there are no Go test cases yet. The Go executable uses only the standard library. `make coverage` reports Go coverage separately.
-
-The initial build targets are `darwin-arm64`, `linux-amd64`, and `windows-amd64`. These are scaffold targets, not a release support guarantee. For a local extension installation:
+You need GitHub CLI (tested with 2.103.3), Go 1.25+, and Make. The module pins Go 1.27.3; the standard Go launcher downloads that toolchain when necessary. From the repository root:
 
 ```sh
 make build-go
 gh extension install .
+gh arrow --version
 gh arrow --help
+gh arrow cat github:flarebyte:gh-arrow:README.md
 ```
 
-CI and release builds use Go 1.27.3; `go.mod` retains Go 1.24 as the minimum language version. Use a supported, patched Go toolchain for local development.
+This installs a local development extension. The configured build targets are `darwin-arm64`, `linux-amd64`, and `windows-amd64`. Full native CI runs on Linux/macOS; Windows is cross-built with only targeted regressions for confirmed implementation bugs, not a general native validation gate.
 
-Pull requests and pushes to `main` run formatting, config/CSV validation, lint, tests, smoke checks, and cross-platform builds in [CI](.github/workflows/ci.yml). `make doc-design` additionally requires flyb to regenerate the specification.
+## Usage
 
-Publishing uses the manually dispatched [release workflow](.github/workflows/release.yml). Before the first release, implement the intended commands and replace `0.0.0-dev` in `main.project.yaml` with the chosen release version. Preflight blocks that scaffold version and existing tags/releases. If publishing fails after tag creation, follow the [release recovery procedure](doc/release-recovery.md) before retrying. The workflow verifies the default-branch commit, builds and checksums assets, then publishes those same assets with write permission confined to the publishing job. Prerelease versions are marked as prereleases. `make build-release` stages assets locally in `build/release` and refuses an existing staging directory; use a clean checkout for each release build. It does not publish.
+```sh
+gh arrow cp github:owner:project:path/to/file.yaml ./local.yaml
+gh arrow cat local:project2:file.md
+gh arrow cat github:owner:project:README.md --ref main
+gh arrow ls 'github:owner:project:docs/**/*.md'
+gh arrow ls --org tools-org --topic cli README.md --json
+```
 
-Build version injection and a CLI `--version` remain future work: flarebyte v0.24.0 hardcodes its own metadata package in linker flags. No release has been published by this setup.
+Sources use `github:<owner>:<repo>:<path>` or `local:<alias>:<path>`. Paths use forward slashes; colon is reserved. Quote shell globs. `ls` supports filename `*` and recursive directory `**`; `cat` and `cp` treat filename metacharacters literally. Organization/user discovery checks exact file paths.
 
-The entry point is `cmd/gh-arrow/main.go`. Development and build settings live in `.gh-flarebyte.cue`; `main.project.yaml` holds the development version. Build outputs and Go caches are ignored. Repository sync and release publication are separate actions; local setup does not require either.
+GitHub sources prefer configured local working trees. A mapping deliberately selects local files: missing mapped files fail without a remote fallback. `--ref` selects a remote branch, tag, or commit and is rejected for mapped sources and discovery.
 
-The extension follows GitHub's [extension packaging conventions](https://docs.github.com/en/github-cli/github-cli/creating-github-cli-extensions).
+Mappings are loaded from `./config.yaml` relative to the working directory, or from `--config <path>`. Roots must be absolute local paths. A missing default config means no mappings; a missing explicitly selected config is an error. Review this trusted configuration before running in an unfamiliar checkout. See the [configuration example](doc/design-meta/examples/config.yaml).
+
+Remote access uses GitHub.com and existing gh credentials. For private repositories, authenticate separately with `gh auth login`. Arrow never prompts, launches a browser, or stores tokens in its config. Public access can work without stored credentials. GitHub Enterprise hosts are outside this version's scope.
+
+`cp` copies one file, requires an existing destination parent, and refuses an existing destination unless `--force` is given. It stages complete bytes before publication and rejects symlink destinations. Source permissions and timestamps are not copied; new files use private permissions.
+
+`cat` writes exact bytes, with no added newline. Successful `cp` writes no stdout. Listings are sorted; text escapes control characters, while `--json` preserves Unicode path values. JSON listings are arrays, including `[]` for no matches; discovery records additionally contain `repository`. Diagnostics go to stderr with stable `ARROW_*` codes. Exit status is 0 for success, 1 for I/O/network/authentication failures, and 2 for invalid arguments or configuration.
+
+## Documentation
+
+- [Contributing](CONTRIBUTING.md): development setup, checks, tests, and specification changes.
+- [Technical design](TECHNICAL_DESIGN.md): code boundaries, safety guarantees, and runtime limits.
+- [Specification](doc/design/specification.md): command contracts and acceptance scenarios.
+- [Documentation index](doc/README.md): design sources, decisions, publishing, and history.
+
+AI agents should start with [AGENTS.md](AGENTS.md). This project includes an [MIT license](LICENSE).

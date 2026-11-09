@@ -18,6 +18,16 @@ class PreflightError(Exception):
     pass
 
 
+# SemVer 2.0: numeric core/prerelease identifiers cannot have leading zeros.
+NUMBER = r'(?:0|[1-9][0-9]*)'
+IDENTIFIER = rf'(?:{NUMBER}|[0-9]*[A-Za-z-][0-9A-Za-z-]*)'
+VERSION = re.compile(
+    rf'{NUMBER}\.{NUMBER}\.{NUMBER}'
+    rf'(?:-{IDENTIFIER}(?:\.{IDENTIFIER})*)?'
+    r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?'
+)
+
+
 def literal(block, field):
     match = re.search(r'\b' + re.escape(field) + r'\s*:\s*("(?:[^"\\]|\\.)*")', block)
     if not match:
@@ -56,9 +66,7 @@ def release_metadata(root, expected_version=None):
         version = matches[0].strip().strip('"\'')
     else:
         raise PreflightError('This Go release workflow requires a YAML or JSON version source')
-    if not isinstance(version, str) or not re.fullmatch(
-        r'[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?', version
-    ):
+    if not isinstance(version, str) or not VERSION.fullmatch(version):
         raise PreflightError(f'Invalid release version: {version!r}')
     if version == '0.0.0-dev':
         raise PreflightError('Choose a release version before publishing; 0.0.0-dev is scaffold-only')
@@ -80,6 +88,7 @@ def release_metadata(root, expected_version=None):
         raise PreflightError('Expected a full Git commit SHA')
     return {
         'version': version,
+        'prerelease': 'true' if '-' in version.split('+', 1)[0] else 'false',
         'tag': tag,
         'commit': commit,
         'artifact_dir': artifact_dir,

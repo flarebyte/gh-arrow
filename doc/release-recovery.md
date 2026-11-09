@@ -1,5 +1,7 @@
 # Recover an interrupted release
 
+For the normal workflow, see [Publishing a release](releasing.md).
+
 Publishing creates a tag before creating the GitHub release and uploading assets.
 If a later request fails, an orphan tag or incomplete draft can remain. Preflight
 deliberately refuses existing tags and releases, so rerunning alone will fail.
