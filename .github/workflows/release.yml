@@ -1,0 +1,106 @@
+name: Manual release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Preflight, lint, tests, and release artifacts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    outputs:
+      version: ${{ steps.preflight.outputs.version }}
+      tag: ${{ steps.preflight.outputs.tag }}
+      commit: ${{ steps.preflight.outputs.commit }}
+      artifact_dir: ${{ steps.preflight.outputs.artifact_dir }}
+    steps:
+      - name: Require the default branch
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: test "$GITHUB_REF" = "refs/heads/$DEFAULT_BRANCH"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          # Build with a supported, patched toolchain; go.mod is the language minimum.
+          go-version: '1.27.3'
+          cache: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned development tooling
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh extension install flarebyte/gh-flarebyte --pin v0.24.0
+      - name: Test the release preflight
+        run: make test-scripts
+      - name: Check version availability before building
+        id: preflight
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/release_preflight.py --github-output "$GITHUB_OUTPUT"
+      - name: Lint and test
+        run: make lint test-go smoke validate-design
+      - name: Build configured release artifacts
+        run: make build-release
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-assets
+          path: ${{ steps.preflight.outputs.artifact_dir }}/
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    name: Create GitHub release
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      ARTIFACT_DIR: ${{ needs.verify.outputs.artifact_dir }}
+      RELEASE_TAG: ${{ needs.verify.outputs.tag }}
+      RELEASE_COMMIT: ${{ needs.verify.outputs.commit }}
+      RELEASE_VERSION: ${{ needs.verify.outputs.version }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.verify.outputs.commit }}
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: release-assets
+          path: ${{ needs.verify.outputs.artifact_dir }}
+      - name: Recheck version and verify downloaded artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/release_preflight.py --expected-version "$RELEASE_VERSION" --expected-commit "$RELEASE_COMMIT" --check-artifacts
+      - name: Create release from the tested commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mapfile -d '' assets < <(find "$ARTIFACT_DIR" -type f -print0)
+          test "${#assets[@]}" -gt 0
+          prerelease=()
+          if [[ "$RELEASE_VERSION" == *-* ]]; then prerelease=(--prerelease); fi
+          # Creating a new ref is atomic: a competing existing tag causes failure.
+          gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
+            -f "ref=refs/tags/$RELEASE_TAG" -f "sha=$RELEASE_COMMIT" --silent
+          gh release create "$RELEASE_TAG" "${assets[@]}" \
+            --repo "$GITHUB_REPOSITORY" --target "$RELEASE_COMMIT" \
+            --verify-tag --generate-notes "${prerelease[@]}"
+      - name: Explain recovery after a publishing failure
+        if: failure()
+        run: echo 'Publishing did not complete. See doc/release-recovery.md before retrying; preflight refuses existing tags and releases.'

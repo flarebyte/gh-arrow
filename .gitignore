@@ -30,3 +30,12 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Local Go tooling and build outputs
+/.gocache/
+/.gomodcache/
+/build/
+/gh-arrow
+
+# Python tooling
+__pycache__/
