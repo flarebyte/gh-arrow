@@ -2,7 +2,7 @@
 
 A planned GitHub CLI extension to copy, display, and discover files in GitHub repositories and mapped local projects. The command will be `gh arrow`; the extension repository and executable will be named `gh-arrow`.
 
-**Status:** specification only. No executable or installable release exists yet. The hosted repository is `gh-arrow`.
+**Status:** Go scaffold only. The executable supports `--help`; file operations are not implemented and no installable release has been published. The hosted repository is `gh-arrow`.
 
 Planned usage:
 
@@ -26,4 +26,27 @@ sh scripts/doc-design.sh
 
 Commit both the sources and generated Markdown. AI agents should start with [AGENTS.md](AGENTS.md) and retrieve only the relevant concept records.
 
-The extension will follow GitHub's [extension packaging conventions](https://docs.github.com/en/github-cli/github-cli/creating-github-cli-extensions). Installation and local build instructions will be added when an executable exists.
+Local development requires Go 1.24 or newer, GitHub CLI, and the `gh flarebyte` extension. From the repository root:
+
+```sh
+gh flarebyte config validate
+gh flarebyte format
+gh flarebyte lint
+gh flarebyte test
+gh flarebyte build
+./build/gh-arrow-darwin-arm64 --help
+```
+
+Choose the binary matching your platform; the initial build targets are `darwin-arm64`, `linux-amd64`, and `windows-amd64`. These are scaffold targets, not a release support guarantee. There are no tests yet. The project currently uses only the Go standard library.
+
+For a local extension installation, build the root executable first:
+
+```sh
+GOCACHE="$PWD/.gocache" GOMODCACHE="$PWD/.gomodcache" go build -o gh-arrow ./cmd/gh-arrow
+gh extension install .
+gh arrow --help
+```
+
+The entry point is `cmd/gh-arrow/main.go`. Development and build settings live in `.gh-flarebyte.cue`; `main.project.yaml` holds the development version. Build outputs and Go caches are ignored. Repository sync and release publication are separate actions; local setup does not require either.
+
+The extension follows GitHub's [extension packaging conventions](https://docs.github.com/en/github-cli/github-cli/creating-github-cli-extensions).

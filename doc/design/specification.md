@@ -98,7 +98,7 @@ export const discoveryExample: DiscoveryListing[] = [
 
 #### Overview
 
-gh-arrow is a planned Go extension invoked as `gh arrow`. It copies, displays and lists files from GitHub or mapped local working trees, and discovers files across organizations or users. This repository currently contains specifications only. The original proposal is preserved in `doc/history/initial-spec.md`; decisions below explicitly replace its standalone name and public-only remote authentication restrictions.
+gh-arrow is a planned Go extension invoked as `gh arrow`. It copies, displays and lists files from GitHub or mapped local working trees, and discovers files across organizations or users. This repository contains specifications and a minimal Go scaffold; only `--help` is implemented. The original proposal is preserved in `doc/history/initial-spec.md`; decisions below explicitly replace its standalone name and public-only remote authentication restrictions.
 
 #### GitHub extension references
 
