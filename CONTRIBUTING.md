@@ -1,14 +1,14 @@
 # Contributing to gh-arrow
 
-Start with the [README](README.md) for usage and local extension installation,
+Start with the [README](README.md) for installation and usage,
 then the [technical design](TECHNICAL_DESIGN.md) to locate the code being changed.
 Run the commands below from the repository root.
 
 ## Development setup
 
-Use the Go, Make, and GitHub CLI prerequisites in the
-[README quick start](README.md#try-it-from-a-checkout). Development checks also
-require Python 3.11+ and `gh flarebyte` v0.24.0. Install the tooling once:
+You need GitHub CLI (tested with 2.103.3), Go 1.25+, Make, Python 3.11+,
+and `gh flarebyte` v0.24.0. The module pins Go 1.27.3; the Go launcher
+downloads that toolchain when necessary. Install the tooling once:
 
 ```sh
 gh extension install flarebyte/gh-flarebyte --pin v0.24.0
@@ -16,6 +16,10 @@ make check-tools
 make build-go
 ./gh-arrow --help
 ```
+
+To install the development extension from this checkout, run `gh extension install .`
+after `make build-go`. An existing installed extension must be removed first with
+`gh extension remove arrow`.
 
 `make build-go` produces the executable at the repository root. `make build`
 creates the configured platform artifacts and checksums under `build/`.

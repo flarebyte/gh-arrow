@@ -1,8 +1,11 @@
 # Publishing a release
 
-See [Contributing](../CONTRIBUTING.md) for setup and local checks. The project is
-currently unreleased; changing documentation or the version file does not publish
-anything. The [README](../README.md) records the current candidate status.
+See [Contributing](../CONTRIBUTING.md) for setup and local checks. Changing
+documentation or the version file does not publish a release.
+
+Use a normal SemVer version such as `0.1.0` for installation with
+`gh extension install flarebyte/gh-arrow`. Prereleases require an explicit
+`--pin` to select their tag.
 
 ## Prepare the candidate
 
