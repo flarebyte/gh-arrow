@@ -15,22 +15,22 @@ Generated from doc/design-meta; edit the source and regenerate.
 | List matching files; quote shell globs. | files.list | C03 | gh arrow ls <source> [--json] |
 | Find an exact repository-relative file across an organization or user. | discovery | C04 | gh arrow ls --org <owner> [--topic <topic>] <path> [--json] |
 | Show syntax and copyable examples without network access. | automation | C05 | gh arrow <command> --help |
-| Override the default ./config.yaml mapping file. | config | C06 | gh arrow <command> --config <path> |
+| Override the default ~/.gh-arrow CUE mapping file. | config | C06 | gh arrow <command> --config <path> |
 | Select a remote branch tag or commit; reject for mapped sources and organization discovery in v1. | source | C07 | gh arrow <command> --ref <ref> |
 | Report the embedded project version and available commit metadata without config or network access. | extension | C08 | gh arrow --version |
 
 #### Mapping configuration
 
-```yaml
-# Roots must be absolute on the local OS; use C:/work/project on Windows.
-github:
-  mappings:
-    - repo: owner:project
-      root: /absolute/path/to/project
-local:
-  mappings:
-    - repo: project2
-      root: /absolute/path/to/project2
+```cue
+// Save as ~/.gh-arrow. Roots must be absolute; use C:/work/project on Windows.
+github: mappings: [{
+ repo: "owner:project"
+ root: "/absolute/path/to/project"
+}]
+local: mappings: [{
+ repo: "project2"
+ root: "/absolute/path/to/project2"
+}]
 ```
 
 #### JSON listing contract
@@ -97,6 +97,7 @@ export const discoveryExample: DiscoveryListing[] = [
 | automation | Treat doc/design-meta as the specification source and generate doc/design/specification.md with flyb. | D03 | Support structured retrieval for agents and readable review for humans. | accepted | DECISIONS.md as the active specification. |
 | source | Prefer explicit local mappings; never fall back remotely after a mapped file is missing. | D04 | A local mapping deliberately selects the working tree. | accepted | Clarifies the original missing-local-file edge case. |
 | extension | Use the current hosted repository name gh-arrow for the extension and executable. | D05 | The repository has been renamed to gh-arrow; align invocation with GitHub extension naming conventions. | accepted | Earlier plan to rename the hosted repository before publication. |
+| config | Use a global ~/.gh-arrow CUE file with an embedded closed schema and no imports. | D08 | Keep machine paths outside project configuration and avoid implicit checkout-controlled mappings. | accepted | No working-directory discovery or legacy format support; --config remains an explicit override. |
 
 #### Overview
 
@@ -133,6 +134,8 @@ Packaging follows [Creating GitHub CLI extensions](https://docs.github.com/en/gi
 | discovery | Include the match through authenticated repository enumeration. | A17 | A user owns an accessible private repository containing the requested file |
 | automation | Escape controls in text; preserve the path value in valid JSON. | A18 | Listing path contains a newline or terminal escape character |
 | extension | Exit 0 with embedded project version; do not read runtime config or credentials. | A19 | Version requested with an absent explicit config and no network access |
+| config | Use only the home mappings; ignore checkout configuration. Explicit --config selects only its named file. | A20 | Global home CUE config and a checkout containing .gh-arrow |
+| config | Exit 2 without exposing configuration values or absolute file paths in diagnostics. | A21 | CUE imports; unknown fields; incomplete values; duplicate mappings; nonabsolute roots |
 
 #### Scope limits
 
@@ -153,8 +156,8 @@ Packaging follows [Creating GitHub CLI extensions](https://docs.github.com/en/gi
 | source | R02 | Resolve github owner:repo through github.mappings first; otherwise use the GitHub API on github.com. Resolve local alias only through local.mappings. Do not infer identities from URLs. |
 | source | R03 | Remote operations use the repository default branch unless --ref is supplied. Resolve the selected ref to one commit before reading paths; use that commit throughout the operation. |
 | source | R04 | Reject absolute source paths and parent traversal. Local opens must enforce containment within the mapped root even if paths change concurrently. Reject symlink path components and nonregular file sources; skip symlinks and special files in listings. Remote reads and discovery must also exclude symlinks and submodules using Git tree entry types. |
-| config | R05 | Read ./config.yaml relative to the working directory unless --config overrides it. Missing default config means no mappings; missing explicit config is an error. Empty config means no mappings. |
-| config | R06 | Reject malformed YAML, duplicate YAML keys, unknown keys, duplicate repo mappings, empty identities and nonabsolute roots. Compare GitHub mapping identities case-insensitively. Never write configuration at runtime. |
+| config | R05 | Read the single global CUE file ~/.gh-arrow unless --config overrides it. Never discover configuration in the working directory. Missing default config means no mappings; missing explicit config is an error. Empty config means no mappings. |
+| config | R06 | Validate self-contained CUE against an embedded closed schema. Reject imports, malformed or incomplete values, unknown fields, duplicate repo mappings, empty identities and nonabsolute roots. Compare GitHub mapping identities case-insensitively. Limit configuration to 1 MiB and sanitize diagnostics. Never write configuration at runtime. |
 | files | R07 | cp requires an existing destination parent; do not create directories. Reject directory or special-file destinations, destination symlinks and copying a file onto itself. Stage complete bytes in a private temporary file beside the destination; publish only after successful transfer. Refusal without --force must be race-safe. Failed copies preserve any existing destination and remove temporary files. |
 | automation | R08 | cat emits raw bytes only. cp emits no stdout on success. Send diagnostics to stderr. |
 | files.list | R09 | ls outputs files only in lexicographic order with forward slashes and no headers or decoration. Paths are relative to the literal directory prefix before a glob; for a file operand return its basename. |

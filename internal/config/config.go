@@ -1,58 +1,77 @@
-// Package config loads read-only working-tree mappings with strict YAML checks.
+// Package config loads read-only working-tree mappings with an embedded CUE schema.
 package config
 
 import (
-	"bytes"
+	_ "embed"
 	"errors"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"cuelang.org/go/cue"
+	"cuelang.org/go/cue/ast"
+	"cuelang.org/go/cue/cuecontext"
+	"cuelang.org/go/cue/parser"
 	"github.com/flarebyte/gh-arrow/internal/diagnostic"
 	"github.com/flarebyte/gh-arrow/internal/source"
-	"go.yaml.in/yaml/v3"
 )
 
 type Mapping struct {
-	Repo string `yaml:"repo"`
-	Root string `yaml:"root"`
+	Repo string `json:"repo"`
+	Root string `json:"root"`
 }
 type group struct {
-	Mappings []Mapping `yaml:"mappings"`
+	Mappings []Mapping `json:"mappings"`
 }
 type Config struct {
-	GitHub group `yaml:"github"`
-	Local  group `yaml:"local"`
+	GitHub group `json:"github"`
+	Local  group `json:"local"`
 }
+
+//go:embed schema.cue
+var schema string
 
 func Load(name string, explicit bool) (Config, error) {
 	var c Config
+	if !explicit && name == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return c, diagnostic.New("ARROW_CONFIG", "cannot resolve home directory")
+		}
+		name = filepath.Join(home, ".gh-arrow")
+	}
 	f, err := os.Open(name)
 	if errors.Is(err, os.ErrNotExist) && !explicit {
 		return c, nil
 	}
 	if err != nil {
-		return c, diagnostic.Wrap("ARROW_CONFIG", "read configuration", err)
+		return c, diagnostic.New("ARROW_CONFIG", "cannot read configuration")
 	}
 	defer f.Close()
 	data, err := io.ReadAll(io.LimitReader(f, 1024*1024+1))
 	if err != nil {
-		return c, diagnostic.Wrap("ARROW_CONFIG", "read configuration", err)
+		return c, diagnostic.New("ARROW_CONFIG", "cannot read configuration")
 	}
 	if len(data) > 1024*1024 {
 		return c, diagnostic.New("ARROW_CONFIG", "configuration exceeds 1 MiB")
 	}
-	dec := yaml.NewDecoder(bytes.NewReader(data))
-	dec.KnownFields(true)
-	if err = dec.Decode(&c); err != nil && !errors.Is(err, io.EOF) {
-		// YAML type errors can include scalar values from a misselected file.
-		// Report the schema failure without echoing potentially sensitive data.
-		return c, diagnostic.New("ARROW_CONFIG", "invalid YAML configuration; check syntax, field names and value types")
+	file, err := parser.ParseFile("config", data)
+	if err != nil {
+		return c, diagnostic.New("ARROW_CONFIG", "invalid CUE configuration; imports are not allowed")
 	}
-	var extra any
-	if err = dec.Decode(&extra); !errors.Is(err, io.EOF) {
-		return c, diagnostic.New("ARROW_CONFIG", "configuration must contain a single YAML document")
+	for _, decl := range file.Decls {
+		if _, ok := decl.(*ast.ImportDecl); ok {
+			return c, diagnostic.New("ARROW_CONFIG", "CUE imports are not allowed")
+		}
+	}
+	ctx := cuecontext.New()
+	value := ctx.CompileString(schema).LookupPath(cue.MakePath(cue.Def("Config"))).Unify(ctx.BuildFile(file))
+	if err := value.Validate(cue.Concrete(true)); err != nil {
+		return c, diagnostic.New("ARROW_CONFIG", "invalid CUE configuration; check schema and concrete values")
+	}
+	if err := value.Decode(&c); err != nil {
+		return c, diagnostic.New("ARROW_CONFIG", "invalid CUE configuration")
 	}
 	for i, g := range []group{c.GitHub, c.Local} {
 		seen := map[string]bool{}

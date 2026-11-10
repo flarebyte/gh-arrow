@@ -20,7 +20,7 @@ notes: [
  {name: "arrow.acceptance", title: "Acceptance scenarios", filepath: "examples/acceptance.csv", arguments: ["format-csv=table"]},
  {name: "arrow.commands", title: "Command surface", filepath: "examples/commands.csv", arguments: ["format-csv=table"]},
  {name: "arrow.concepts", title: "Concept registry", filepath: "examples/concepts.csv", arguments: ["format-csv=table"]},
- {name: "arrow.config", title: "Mapping configuration", filepath: "examples/config.yaml"},
+ {name: "arrow.config", title: "Mapping configuration", filepath: "examples/config.cue"},
  {name: "arrow.constraints", title: "Scope limits", filepath: "examples/constraints.csv", arguments: ["format-csv=table"]},
  {name: "arrow.decisions", title: "Design decisions", filepath: "examples/decisions.csv", arguments: ["format-csv=table"]},
  {name: "arrow.listing", title: "JSON listing contract", filepath: "examples/listing.ts"},

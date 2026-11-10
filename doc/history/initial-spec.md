@@ -30,7 +30,7 @@ Create a CLI utility `gha` in Go that allows copying or displaying files from ei
 
 2. Copy a file from a locally cloned GitHub project using defined mappings:
 
-   - If `config.yaml` maps `owner:project` to a local path, copy from there instead of GitHub.
+   - If `.gh-arrow` maps `owner:project` to a local path, copy from there instead of GitHub.
 
 3. Display contents of a file from local mapping without writing to disk:
 
@@ -59,7 +59,7 @@ Create a CLI utility `gha` in Go that allows copying or displaying files from ei
 ---
 
 **Configuration (YAML)**
-A single configuration file `config.yaml` defines mappings:
+A single configuration file `.gh-arrow` defines mappings:
 
 ```
 github:
@@ -103,7 +103,7 @@ local:
 
 Extend the `gha` utility to support listing files in a given path from either a GitHub repository or a local mapping using the command:
 `gha ls <source_path>`.
-The utility should support optional glob-like filtering (`*` and `**`) and resolve paths via `config.yaml` mappings, similar to the `cp` and `cat` commands.
+The utility should support optional glob-like filtering (`*` and `**`) and resolve paths via `.gh-arrow` mappings, similar to the `cp` and `cat` commands.
 
 ---
 
@@ -186,9 +186,9 @@ This command searches across multiple repositories within a GitHub organization 
 
    - `gha ls --org openai --topic cli README.md`
 
-3. Enumerate all repos under an org containing `config.yaml` at the root:
+3. Enumerate all repos under an org containing `.gh-arrow` at the root:
 
-   - `gha ls --org tools-org config.yaml`
+   - `gha ls --org tools-org .gh-arrow`
 
 4. Use as a discovery tool to find where a certain file is defined across projects in a codebase.
 

@@ -16,7 +16,7 @@ type options struct {
 
 func usage(message string) error { return diagnostic.New("ARROW_USAGE", message) }
 func parse(args []string) (options, error) {
-	o := options{config: "config.yaml"}
+	o := options{}
 	seen := map[string]bool{}
 	positional := false
 	for i := 0; i < len(args); i++ {

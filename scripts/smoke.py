@@ -1,6 +1,7 @@
 """Exercise the executable against temporary local fixtures, without GitHub access."""
 
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -17,14 +18,14 @@ def main():
         raw = bytes([0, 255, 13, 10])
         (project / 'docs' / 'a.md').write_bytes(raw)
         (project / 'docs' / 'z.md').write_bytes(b'z')
-        config = root / 'config.yaml'
+        config = root / '.gh-arrow'
         config.write_text(json.dumps({
             'local': {'mappings': [{'repo': 'fixture', 'root': str(project)}]},
             'github': {'mappings': [{'repo': 'owner:repo', 'root': str(project)}]},
         }))
 
         def run(*args):
-            return subprocess.run([binary, *args], cwd=root, capture_output=True, timeout=10)
+            return subprocess.run([binary, *args], cwd=root, env={**os.environ, "HOME": str(root), "USERPROFILE": str(root)}, capture_output=True, timeout=10)
 
         for flag in ('--help', '-h'):
             result = run(flag)
