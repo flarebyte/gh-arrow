@@ -67,7 +67,7 @@ func (r Runner) execute(ctx context.Context, o options, out io.Writer) error {
 		return err
 	}
 	if o.help {
-		_, err := fmt.Fprint(out, "Usage: gh arrow <command> [options]\n\nCommands:\n  cp <source> <destination> [--force]\n  cat <source>\n  ls <source> [--json]\n  ls --org <owner> [--topic <topic>] <path> [--json]\n\nRoot option: --version\nOptions: --config <path>, --ref <ref> (remote sources only), --help\nSources: github:<owner>:<repo>:<path> or local:<alias>:<path>\n\nExamples:\n  gh arrow cat local:project:README.md\n  gh arrow ls 'github:owner:repo:docs/**/*.md' --json\n  gh arrow cp github:owner:repo:README.md ./README.md\n")
+		_, err := fmt.Fprint(out, "Usage: gh arrow <command> [options]\n\nCommands:\n  cp <source> <destination> [--force]\n  cat <source>\n  ls <source> [--json]\n  ls --org <owner> [--topic <topic>] <path> [--json]\n\nRoot option: --version\nOptions: --config <path> (default: ~/.gh-arrow, CUE), --ref <ref> (remote sources only), --help\nSources: github:<owner>:<repo>:<path> or local:<alias>:<path>\n\nExamples:\n  gh arrow cat local:project:README.md\n  gh arrow ls 'github:owner:repo:docs/**/*.md' --json\n  gh arrow cp github:owner:repo:README.md ./README.md\n")
 		return err
 	}
 	if err := ctx.Err(); err != nil {

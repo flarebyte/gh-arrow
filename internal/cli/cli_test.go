@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,8 +19,9 @@ func localFixture(t *testing.T) (string, string) {
 	os.Mkdir(filepath.Join(root, "docs"), 0700)
 	os.WriteFile(filepath.Join(root, "docs/a.md"), []byte{0, 255, '\r', '\n'}, 0600)
 	os.WriteFile(filepath.Join(root, "docs/z.md"), []byte("z"), 0600)
-	config := filepath.Join(t.TempDir(), "config.yaml")
-	os.WriteFile(config, []byte("local:\n  mappings:\n    - repo: fixture\n      root: "+root+"\ngithub:\n  mappings:\n    - repo: o:r\n      root: "+root+"\n"), 0600)
+	config := filepath.Join(t.TempDir(), "config.cue")
+	os.WriteFile(config, []byte(fmt.Sprintf(`local: mappings: [{repo: "fixture", root: %q}]
+github: mappings: [{repo: "o:r", root: %q}]`, root, root)), 0600)
 	return root, config
 }
 func TestLocalCommandsAndNoFallbackA01A02A13(t *testing.T) {

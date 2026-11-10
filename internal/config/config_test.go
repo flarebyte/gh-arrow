@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,20 +11,20 @@ import (
 )
 
 func TestLoadA03(t *testing.T) {
-	p := filepath.Join(t.TempDir(), "config.yaml")
+	p := filepath.Join(t.TempDir(), "config.cue")
 	if _, err := Load(p, false); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := Load(p, true); err == nil {
 		t.Fatal("missing explicit config accepted")
 	}
-	for _, text := range []string{"", "{}", "# empty\n"} {
+	for _, text := range []string{"", "{}", "// empty\n"} {
 		os.WriteFile(p, []byte(text), 0600)
 		if _, err := Load(p, true); err != nil {
 			t.Fatal(err)
 		}
 	}
-	for _, text := range []string{"unknown: true", "github: [", "github: {}\ngithub: {}", "local:\n  mappings:\n    - repo: a\n      root: relative", "{}\n---\n{}", "local:\n  mappings:\n    - repo: a\n      root: /a\n    - repo: a\n      root: /b", "github:\n  mappings:\n    - repo: Owner:Repo\n      root: /a\n    - repo: owner:repo\n      root: /b"} {
+	for _, text := range []string{`unknown: true`, `github: [`, `local: mappings: [{repo: "a", root: "relative"}]`, `local: mappings: [{repo: "a", root: "/a"}, {repo: "a", root: "/b"}]`, `github: mappings: [{repo: "Owner:Repo", root: "/a"}, {repo: "owner:repo", root: "/b"}]`, `local: mappings: [{repo: "a"}]`, `local: mappings: [{repo: string, root: "/a"}]`, `import "os"`, `import "strings"; local: mappings: []`, `local: mappings: [{repo: "a", root: "/a", extra: true}]`} {
 		os.WriteFile(p, []byte(text), 0600)
 		if _, err := Load(p, true); err == nil {
 			t.Errorf("accepted %q", text)
@@ -32,9 +33,9 @@ func TestLoadA03(t *testing.T) {
 }
 
 func TestMalformedConfigDoesNotEchoScalarValues(t *testing.T) {
-	name := filepath.Join(t.TempDir(), "config.yaml")
+	name := filepath.Join(t.TempDir(), "config.cue")
 	const secret = "token42"
-	for _, data := range []string{"github: " + secret, "local:\n  mappings: " + secret} {
+	for _, data := range []string{`github: "` + secret + `"`, `local: mappings: "` + secret + `"`} {
 		if err := os.WriteFile(name, []byte(data), 0600); err != nil {
 			t.Fatal(err)
 		}
@@ -47,8 +48,9 @@ func TestMalformedConfigDoesNotEchoScalarValues(t *testing.T) {
 
 func TestResolveMappingPrecedenceA01(t *testing.T) {
 	root := t.TempDir()
-	p := filepath.Join(t.TempDir(), "config.yaml")
-	os.WriteFile(p, []byte("github:\n  mappings:\n    - repo: Owner:Repo\n      root: "+root+"\nlocal:\n  mappings:\n    - repo: project\n      root: "+root+"\n"), 0600)
+	p := filepath.Join(t.TempDir(), "config.cue")
+	os.WriteFile(p, []byte(fmt.Sprintf(`github: mappings: [{repo: "Owner:Repo", root: %q}]
+local: mappings: [{repo: "project", root: %q}]`, root, root)), 0600)
 	c, err := Load(p, true)
 	if err != nil {
 		t.Fatal(err)
@@ -67,5 +69,47 @@ func TestResolveMappingPrecedenceA01(t *testing.T) {
 	s, _ = source.Parse("local:unknown:file")
 	if _, err := c.Root(s); err == nil {
 		t.Fatal("unknown alias accepted")
+	}
+}
+
+func TestDefaultHomeConfig(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	t.Chdir(t.TempDir())
+	os.WriteFile("config.yaml", []byte("invalid"), 0600)
+	if _, err := Load("", false); err != nil {
+		t.Fatal(err)
+	}
+	os.WriteFile(filepath.Join(home, ".gh-arrow"), []byte(`local: mappings: [{repo: "home", root: `+fmt.Sprintf("%q", home)+`}]`), 0600)
+	c, err := Load("", false)
+	if err != nil || len(c.Local.Mappings) != 1 {
+		t.Fatalf("home config: %+v %v", c, err)
+	}
+}
+
+func TestExplicitOverrideAndLimits(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	if err := os.WriteFile(filepath.Join(home, ".gh-arrow"), []byte("invalid"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	name := filepath.Join(t.TempDir(), "config.cue")
+	if err := os.WriteFile(name, []byte("{}"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Load(name, true); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(name, []byte(strings.Repeat(" ", 1024*1024+1)), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Load(name, true); err == nil {
+		t.Fatal("oversize config accepted")
+	}
+	missing := filepath.Join(home, "private-name")
+	if _, err := Load(missing, true); err == nil || strings.Contains(err.Error(), home) || strings.Contains(err.Error(), "private-name") {
+		t.Fatalf("unsafe I/O diagnostic: %v", err)
 	}
 }

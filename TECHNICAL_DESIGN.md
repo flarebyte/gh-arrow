@@ -12,7 +12,7 @@ The commands are implemented; see the [README](README.md) for release status and
 | `cmd/gh-arrow` | Signals, process streams, and final exit status |
 | `internal/cli` | Argument validation, orchestration, and output rendering |
 | `internal/source` | Explicit source identities and repository-relative paths |
-| `internal/config` | Strict, read-only YAML mappings |
+| `internal/config` | Global, schema-validated CUE mappings |
 | `internal/local` | Descriptor-relative reads, filesystem traversal, staged copies |
 | `internal/github` | gh credentials, HTTP errors, pinned Git trees, discovery |
 | `internal/listing` | Shared glob matching, sorting, and text escaping |
@@ -105,3 +105,8 @@ Normal tests do not access GitHub or the user's real credentials. Real private
 access is an opt-in check in the [release checklist](doc/releasing.md#prepare-the-candidate).
 
 Enterprise hosts remain outside v1.
+
+Configuration defaults to `~/.gh-arrow`, resolved with `os.UserHomeDir`. An embedded
+closed CUE schema validates a single file; imports are rejected before evaluation.
+No module, directory, network, or environment loading is used. CUE diagnostics and
+configuration I/O errors are sanitized to avoid exposing values and paths.

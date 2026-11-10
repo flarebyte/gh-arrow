@@ -12,7 +12,7 @@ rg -n '(^|,)"?files(\.[a-z0-9-]+)*"?(,|$)' doc/design-meta/examples -g '*.csv'
 head -n 1 doc/design-meta/examples/rules.csv
 ```
 
-Text search identifies candidates; inspect headers and use Python's csv module for exact column filtering. Follow related requirements across concepts. The config.yaml and listing.ts examples carry additional contracts; inspect their notes in app.cue. TypeScript describes JSON shapes, not an implementation language.
+Text search identifies candidates; inspect headers and use Python's csv module for exact column filtering. Follow related requirements across concepts. The config.cue and listing.ts examples carry additional contracts; inspect their notes in app.cue. TypeScript describes JSON shapes, not an implementation language.
 
 Tables cover decisions, commands, use cases, rules, scope limits, acceptance scenarios, and open questions. Keep stable record IDs and one physical line per CSV record. Reuse concepts rather than inventing synonymous labels. Small inputs stay flat until domain folders help navigation.
 
