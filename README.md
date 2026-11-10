@@ -36,7 +36,7 @@ Sources use `github:<owner>:<repo>:<path>` or `local:<alias>:<path>`. Paths use 
 
 GitHub sources prefer configured local working trees. A mapping deliberately selects local files: missing mapped files fail without a remote fallback. `--ref` selects a remote branch, tag, or commit and is rejected for mapped sources and discovery.
 
-Mappings are loaded from the global CUE file `~/.gh-arrow`, or from `--config <path>`. Arrow never loads a checkout's `config.yaml`. Roots must be absolute local paths. A missing default config means no mappings; a missing explicitly selected config is an error. No separate CUE executable is needed.
+Mappings are loaded from the global CUE file `~/.gh-arrow`, or from `--config <path>`. Arrow never discovers configuration in a checkout. Roots must be absolute local paths. A missing default config means no mappings; a missing explicitly selected config is an error. No separate CUE executable is needed.
 
 ```cue
 local: mappings: [{
@@ -45,7 +45,7 @@ local: mappings: [{
 }]
 ```
 
-The embedded schema rejects unknown fields and incomplete values; imports are not allowed. See the [full configuration example](doc/design-meta/examples/config.cue). To migrate, convert your YAML mappings to CUE in `~/.gh-arrow`; no automatic migration is performed. Keep credentials out of this file.
+The embedded schema rejects unknown fields and incomplete values; imports are not allowed. See the [full configuration example](doc/design-meta/examples/config.cue). Keep credentials out of this file.
 
 Remote access uses GitHub.com and existing gh credentials. For private repositories, authenticate separately with `gh auth login`. Arrow never prompts, launches a browser, or stores tokens in its config. Public access can work without stored credentials. GitHub Enterprise hosts are outside this version's scope.
 

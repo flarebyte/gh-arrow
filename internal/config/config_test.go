@@ -77,7 +77,7 @@ func TestDefaultHomeConfig(t *testing.T) {
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", home)
 	t.Chdir(t.TempDir())
-	os.WriteFile("config.yaml", []byte("invalid"), 0600)
+	os.WriteFile(".gh-arrow", []byte("invalid"), 0600)
 	if _, err := Load("", false); err != nil {
 		t.Fatal(err)
 	}

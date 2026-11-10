@@ -97,7 +97,7 @@ export const discoveryExample: DiscoveryListing[] = [
 | automation | Treat doc/design-meta as the specification source and generate doc/design/specification.md with flyb. | D03 | Support structured retrieval for agents and readable review for humans. | accepted | DECISIONS.md as the active specification. |
 | source | Prefer explicit local mappings; never fall back remotely after a mapped file is missing. | D04 | A local mapping deliberately selects the working tree. | accepted | Clarifies the original missing-local-file edge case. |
 | extension | Use the current hosted repository name gh-arrow for the extension and executable. | D05 | The repository has been renamed to gh-arrow; align invocation with GitHub extension naming conventions. | accepted | Earlier plan to rename the hosted repository before publication. |
-| config | Use a global ~/.gh-arrow CUE file with an embedded closed schema and no imports. | D08 | Keep machine paths outside project configuration and avoid implicit checkout-controlled mappings. | accepted | Replaces working-directory YAML configuration; --config remains an explicit override. |
+| config | Use a global ~/.gh-arrow CUE file with an embedded closed schema and no imports. | D08 | Keep machine paths outside project configuration and avoid implicit checkout-controlled mappings. | accepted | No working-directory discovery or legacy format support; --config remains an explicit override. |
 
 #### Overview
 
@@ -134,7 +134,7 @@ Packaging follows [Creating GitHub CLI extensions](https://docs.github.com/en/gi
 | discovery | Include the match through authenticated repository enumeration. | A17 | A user owns an accessible private repository containing the requested file |
 | automation | Escape controls in text; preserve the path value in valid JSON. | A18 | Listing path contains a newline or terminal escape character |
 | extension | Exit 0 with embedded project version; do not read runtime config or credentials. | A19 | Version requested with an absent explicit config and no network access |
-| config | Use only the home mappings; ignore checkout configuration. Explicit --config selects only its named file. | A20 | Global home CUE config and a checkout containing config.yaml |
+| config | Use only the home mappings; ignore checkout configuration. Explicit --config selects only its named file. | A20 | Global home CUE config and a checkout containing .gh-arrow |
 | config | Exit 2 without exposing configuration values or absolute file paths in diagnostics. | A21 | CUE imports; unknown fields; incomplete values; duplicate mappings; nonabsolute roots |
 
 #### Scope limits
