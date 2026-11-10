@@ -66,5 +66,6 @@ check-tools: ## Report availability of development tools.
 install-tools-help: ## Show tool setup guidance without installing anything.
 	@printf '%s\n' 'Go 1.25+ (module toolchain: 1.27.3): https://go.dev/doc/install' 'GitHub CLI: https://cli.github.com/' 'gh extension install flarebyte/gh-flarebyte --pin v0.24.0' 'Python 3.11+: https://www.python.org/downloads/' 'flyb (documentation generation): install the flyb CLI.'
 
-help: ## Show available targets.
+help: ## Show installation guidance and development targets.
+	@printf '%s\n' 'Install: gh extension install flarebyte/gh-arrow' 'Pinned:  gh extension install flarebyte/gh-arrow --pin v0.1.0' '' 'Development targets (from a checkout):'
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z0-9_.-]+:.*## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)

@@ -2,21 +2,25 @@
 
 A Go GitHub CLI extension to copy, display, and discover files in GitHub repositories and mapped local projects. Invoke it as `gh arrow`.
 
-**Version:** `0.1.0-alpha.1`, an unreleased alpha candidate. No installable release has been published. The commands are implemented and covered by offline tests; native platform checks are configured in CI.
+## Install
 
-## Try it from a checkout
-
-You need GitHub CLI (tested with 2.103.3), Go 1.25+, and Make. The module pins Go 1.27.3; the standard Go launcher downloads that toolchain when necessary. From the repository root:
+Install [GitHub CLI](https://cli.github.com/), then run:
 
 ```sh
-make build-go
-gh extension install .
+gh extension install flarebyte/gh-arrow
 gh arrow --version
 gh arrow --help
 gh arrow cat github:flarebyte:gh-arrow:README.md
 ```
 
-This installs a local development extension. The configured build targets are `darwin-arm64`, `linux-amd64`, and `windows-amd64`. Full native CI runs on Linux/macOS; Windows is cross-built with only targeted regressions for confirmed implementation bugs, not a general native validation gate.
+To pin a specific release instead:
+
+```sh
+gh extension install flarebyte/gh-arrow --pin v0.1.0
+```
+
+Release binaries target `darwin-arm64`, `linux-amd64`, and `windows-amd64`.
+For building from a checkout, see [development setup](CONTRIBUTING.md#development-setup).
 
 ## Usage
 
