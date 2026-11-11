@@ -24,6 +24,8 @@ class ReserveSyncTests(unittest.TestCase):
         self.fixture = self.root / "reserve"
         shutil.copyfile(ROOT / "Makefile", self.root / "Makefile")
         shutil.copytree(ROOT / ".config", self.root / ".config")
+        shutil.copytree(ROOT / "scripts", self.root / "scripts",
+                        ignore=shutil.ignore_patterns("__pycache__"))
         for name, directory in FILES.items():
             source = self.fixture / directory / name
             source.parent.mkdir(parents=True, exist_ok=True)
@@ -36,6 +38,7 @@ class ReserveSyncTests(unittest.TestCase):
             "#!/usr/bin/env python3\n"
             "import os, pathlib, shutil, sys\n"
             "a = sys.argv[1:]\n"
+            "pathlib.Path(os.environ['ARROW_CALL_LOG']).write_text('called')\n"
             "assert a[0] == 'arrow'\n"
             "assert a[a.index('--config') + 1] == '.config/reserve-arrow.cue'\n"
             "config = pathlib.Path('.config/reserve-arrow.cue').read_text()\n"
@@ -57,15 +60,32 @@ class ReserveSyncTests(unittest.TestCase):
         )
         gh.chmod(0o755)
         self.env = dict(os.environ, PATH=str(binary) + os.pathsep + os.environ["PATH"],
-                        RESERVE_FIXTURE=str(self.fixture))
+                        RESERVE_FIXTURE=str(self.fixture),
+                        ARROW_CALL_LOG=str(self.root / "arrow-call.log"))
 
-    def run_make(self, target, success=True):
-        result = subprocess.run(["make", target], cwd=self.root, env=self.env,
+    def run_make(self, target, success=True, ref="a" * 40):
+        command = ["make", target]
+        if ref is not None:
+            command.append("RESERVE_REF=" + ref)
+        result = subprocess.run(command, cwd=self.root, env=self.env,
                                 capture_output=True, text=True)
         if success:
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         else:
             self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        return result
+
+    def test_pending_or_invalid_revision_fails_before_arrow(self):
+        targets = ["reserve-check", "reserve-sync", "reserve-check-go",
+                   "reserve-sync-go", "reserve-check-go-test", "reserve-sync-go-test",
+                   "reserve-check-ts-e2e", "reserve-sync-ts-e2e"]
+        for ref in [None, "", "main", "a" * 39, "g" * 40]:
+            for target in targets:
+                with self.subTest(ref=ref, target=target):
+                    result = self.run_make(target, success=False, ref=ref)
+                    self.assertIn("RESERVE_REF must be a full 40-character commit SHA",
+                                  result.stderr)
+                    self.assertFalse((self.root / "arrow-call.log").exists())
 
     def test_equal_and_repeated_sync(self):
         self.run_make("reserve-check")

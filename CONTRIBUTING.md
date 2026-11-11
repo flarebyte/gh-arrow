@@ -111,15 +111,25 @@ when refreshing it; analysis generation does not run the tests above.
 
 The three `pipeline-*.thoth.cue` configs are unchanged copies managed by
 `baldrick-reserve`. The [Makefile](Makefile) lists each canonical source, local
-destination, and the immutable `RESERVE_REF`. These targets require installed
-`gh arrow` and network access to GitHub. Publish the pinned reserve commit before
-the first remote sync; a commit available only in a local checkout cannot be
-retrieved by these targets. From this repository's root, run:
+destination. `RESERVE_REF` is deliberately empty while the reserve changes await
+review, commit, and publication; the targets fail before contacting GitHub until
+a full 40-character commit SHA is supplied. Creating or updating sync targets
+does not require committing the reserve changes.
+
+After the reserve changes are reviewed and explicitly committed and published,
+verify that the revision contains the shared files and set `RESERVE_REF` in the
+Makefile. These targets require installed `gh arrow`, Python 3, and network
+access to GitHub. A commit available only in a local checkout cannot be
+retrieved. From this repository's root, run:
 
 ```sh
 make reserve-check
 make reserve-sync
 ```
+
+For a one-off revision, pass `RESERVE_REF='<published-full-commit-sha>'` to either
+command. The placeholder must be replaced with a verified full SHA. Revision
+validation checks syntax locally; successful retrieval confirms availability.
 
 `reserve-check` detects drift without changing the configs. `reserve-sync`
 replaces all three listed configs, including the currently inactive TypeScript
@@ -129,14 +139,17 @@ failure can leave earlier files updated. The dedicated
 [Arrow config](.config/reserve-arrow.cue) prevents global local mappings from
 overriding the pinned remote sources.
 
-For improvements, edit the canonical files in `baldrick-reserve`, validate their
-consumers, publish the reserve commit, then update `RESERVE_REF` here and review
-the sync diff. The reserve's `shared/CATALOG.md` records compatibility and
-runtime prerequisites.
+For improvements, edit the canonical files on the reserve's active branch,
+validate their consumers, and leave changes uncommitted for review. If the active
+branch is `main` or `master`, ask how to proceed before editing. Commit or push
+only when explicitly requested. Once a revision containing the changes is
+published, update `RESERVE_REF` here and review the sync diff. The reserve's
+`shared/CATALOG.md` records compatibility and runtime prerequisites.
 
 `scripts/test_reserve_sync.py` checks these Makefile recipes with an offline
 Arrow substitute as part of `make test-scripts`. It covers drift, missing files,
-fetch failures, symlink rejection during checks, and repeated sync. It does not
+fetch failures, symlink rejection during checks, repeated sync, and rejection of
+pending or malformed revisions before Arrow runs. It does not
 verify that the pinned revision is reachable on GitHub.
 
 ## Prepare a release
