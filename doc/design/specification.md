@@ -80,7 +80,7 @@ export const discoveryExample: DiscoveryListing[] = [
 
 | concept | id | question | status |
 | --- | --- | --- | --- |
-| extension | Q01 | Which Go and gh minimum versions and release OS/architecture targets should be supported? | Initial implementation: Go 1.25 language minimum with Go 1.27.3 toolchain; gh 2.103.3 tested baseline; linux-amd64 and darwin-arm64 have full native CI. windows-amd64 remains cross-built; Windows checks are limited to regressions for confirmed implementation bugs. |
+| extension | Q01 | Which Go and gh minimum versions and release OS/architecture targets should be supported? | Initial implementation: Go 1.25 language minimum with Go 1.27.4 toolchain; gh 2.103.3 tested baseline; linux-amd64 and darwin-arm64 have full native CI. windows-amd64 remains cross-built; Windows checks are limited to regressions for confirmed implementation bugs. |
 | discovery | Q02 | Which bounded concurrency and retry limits should discovery use? | Resolved: four workers; 30-second requests; two retries for network/5xx failures; no rate-limit retry. Finite metadata and traversal limits are documented in TECHNICAL_DESIGN.md. |
 | automation | Q03 | Should future versions support GitHub Enterprise hosts and richer structured error output? | Deferred beyond v1. |
 

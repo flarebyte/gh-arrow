@@ -7,7 +7,7 @@ Run the commands below from the repository root.
 ## Development setup
 
 You need GitHub CLI (tested with 2.103.3), Go 1.25+, Make, Python 3.11+,
-and `gh flarebyte` v0.24.0. The module pins Go 1.27.3; the Go launcher
+and `gh flarebyte` v0.24.0. The module pins Go 1.27.4; the Go launcher
 downloads that toolchain when necessary. Install the tooling once:
 
 ```sh
