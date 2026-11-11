@@ -1,0 +1,20 @@
+locator: internal/local/unix_test.go
+meta:
+  purpose: "Verify Unix special-file rejection, confinement, and concurrent filesystem safety."
+  function_list:
+    - TestConcurrentSymlinkReplacementA12
+    - TestListingRejectsInvalidUTF8Names
+    - TestSpecialFileA15
+    - TestUnwritableParentA05
+  import_files_list:
+    - bytes
+    - context
+    - github.com/flarebyte/gh-arrow/internal/diagnostic
+    - golang.org/x/sys/unix
+    - os
+    - path/filepath
+    - sync
+    - testing
+    - time
+    - unicode/utf8
+  language: go

@@ -1,0 +1,17 @@
+locator: internal/config/config_test.go
+meta:
+  purpose: "Verify mapping validation and explicit configuration loading boundaries."
+  function_list:
+    - TestDefaultHomeConfig
+    - TestExplicitOverrideAndLimits
+    - TestLoadA03
+    - TestMalformedConfigDoesNotEchoScalarValues
+    - TestResolveMappingPrecedenceA01
+  import_files_list:
+    - fmt
+    - github.com/flarebyte/gh-arrow/internal/source
+    - os
+    - path/filepath
+    - strings
+    - testing
+  language: go

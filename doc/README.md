@@ -7,6 +7,7 @@ Start with the document matching your task:
 | Install locally and use the commands | [README](../README.md) |
 | Set up development, write tests, and run checks | [Contributing](../CONTRIBUTING.md) |
 | Navigate implementation boundaries and safety guarantees | [Technical design](../TECHNICAL_DESIGN.md) |
+| Find per-file Go summaries and analysis coverage limits | [Thoth analysis](../thoth-meta/README.md) |
 | Read command contracts and acceptance scenarios | [Generated specification](design/specification.md) |
 | Find and edit specification sources | [Design source guide](design-meta/AGENTS.md) |
 | Inspect accepted decisions and their stable IDs | [Decision records](design-meta/examples/decisions.csv) |

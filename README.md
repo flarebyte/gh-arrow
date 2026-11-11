@@ -4,7 +4,10 @@ A Go GitHub CLI extension to copy, display, and discover files in GitHub reposit
 
 ## Install
 
-Install [GitHub CLI](https://cli.github.com/), then run:
+Release installation requires [GitHub CLI](https://cli.github.com/) and a
+published release with an artifact for your platform. To build from this
+checkout, use the [development setup](CONTRIBUTING.md#development-setup).
+When a release is available, run:
 
 ```sh
 gh extension install flarebyte/gh-arrow
@@ -13,14 +16,13 @@ gh arrow --help
 gh arrow cat github:flarebyte:gh-arrow:README.md
 ```
 
-To pin a specific release instead:
+To pin a specific published tag, replace `<release-tag>` below:
 
 ```sh
-gh extension install flarebyte/gh-arrow --pin v0.1.0
+gh extension install flarebyte/gh-arrow --pin '<release-tag>'
 ```
 
-Release binaries target `darwin-arm64`, `linux-amd64`, and `windows-amd64`.
-For building from a checkout, see [development setup](CONTRIBUTING.md#development-setup).
+Configured release builds target `darwin-arm64`, `linux-amd64`, and `windows-amd64`.
 
 ## Usage
 

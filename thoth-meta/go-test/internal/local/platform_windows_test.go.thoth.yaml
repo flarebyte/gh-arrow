@@ -1,0 +1,10 @@
+locator: internal/local/platform_windows_test.go
+meta:
+  purpose: "Verify Windows private temporary-file ACLs and native filesystem regressions."
+  function_list:
+    - TestTemporaryFileHasPrivateACL
+  import_files_list:
+    - golang.org/x/sys/windows
+    - os
+    - testing
+  language: go

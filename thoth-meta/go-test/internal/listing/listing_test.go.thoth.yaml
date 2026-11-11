@@ -1,0 +1,11 @@
+locator: internal/listing/listing_test.go
+meta:
+  purpose: "Verify shared glob matching and listing rendering contracts, including fuzz inputs."
+  function_list:
+    - FuzzPattern
+    - TestOutputA13A18
+    - TestPatternsA07
+  import_files_list:
+    - reflect
+    - testing
+  language: go

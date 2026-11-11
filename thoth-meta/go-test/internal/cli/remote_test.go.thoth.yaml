@@ -1,0 +1,18 @@
+locator: internal/cli/remote_test.go
+meta:
+  purpose: "Exercise remote CLI acceptance contracts using fixture HTTP transports rather than GitHub access."
+  function_list:
+    - TestDiscoveryIgnoresMappingsA10A13
+    - TestRemoteCommandContractsA06A11A16
+    - remoteFixture
+  import_files_list:
+    - bytes
+    - context
+    - github.com/flarebyte/gh-arrow/internal/github
+    - io
+    - net/http
+    - os
+    - path/filepath
+    - strings
+    - testing
+  language: go

@@ -1,0 +1,10 @@
+locator: project.go
+meta:
+  purpose: "Expose the embedded release version without runtime files or network access."
+  function_list:
+    - Version
+    - decodeVersion
+  import_files_list:
+    - embed
+    - go.yaml.in/yaml/v3
+  language: go

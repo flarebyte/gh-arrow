@@ -2,7 +2,7 @@
 
 The [specification](doc/design/specification.md) defines command behavior. Tests
 reference its acceptance IDs (A01–A19); changes should begin with a failing test.
-The commands are implemented; see the [README](README.md) for release status and
+The commands are implemented; see the [README](README.md) for usage and
 [Contributing](CONTRIBUTING.md) for setup and check commands.
 
 ## Boundaries
@@ -21,6 +21,10 @@ The commands are implemented; see the [README](README.md) for release status and
 The root `project.go` embeds `main.project.yaml` as build metadata; it does not
 define a supported library API. `--version` reports that version and available Go
 VCS build settings without runtime files or network access.
+
+The [Thoth metadata guide](thoth-meta/README.md) links this package overview to
+per-file Go summaries and explains their coverage limits. Source and tests
+remain authoritative when changing behavior.
 
 The shared backend interface lives at its consumer in `internal/cli`. Both
 backends expose open, stat, and list operations. Discovery belongs to the GitHub
@@ -64,7 +68,8 @@ credentials are never included in diagnostics. Public reads can run without a
 stored token. Authentication errors guide the user to run `gh auth login`
 separately. Resolve the selected branch/tag/ref to one commit tree using the
 metadata-only commit-list endpoint before reads; the single-commit endpoint can
-include file diffs and is deliberately avoided. Inspect Git tree entry modes to exclude symlinks and submodules; fetch file bytes
+include file diffs and is deliberately avoided. Inspect Git tree entry modes to
+exclude symlinks and submodules; fetch file bytes
 through the raw Git blob API rather than the Contents API's symlink behavior.
 
 Directory and discovery results are collected and sorted before stdout is

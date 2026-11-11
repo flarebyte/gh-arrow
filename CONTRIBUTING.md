@@ -100,6 +100,13 @@ boundaries in the technical design. Link between documents instead of repeating
 contracts. [AGENTS.md](AGENTS.md) contains the repository's agent instructions;
 the [documentation index](doc/README.md) identifies each document's role.
 
+## Refresh code analysis
+
+The optional [Thoth analysis](thoth-meta/README.md) summarizes Go source and test
+files. Its guide lists pipeline relevance, coverage gaps, prerequisites, and
+refresh commands. Review generated metadata and preserve curated purpose fields
+when refreshing it; analysis generation does not run the tests above.
+
 ## Prepare a release
 
 Follow [Publishing a release](doc/releasing.md) for version changes and

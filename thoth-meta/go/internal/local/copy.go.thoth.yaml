@@ -1,0 +1,16 @@
+locator: internal/local/copy.go
+meta:
+  purpose: "Stage complete file copies and publish destinations with atomic no-clobber or replacement semantics."
+  function_list:
+    - Copy
+    - Stream
+  import_files_list:
+    - context
+    - crypto/rand
+    - errors
+    - fmt
+    - io
+    - io/fs
+    - os
+    - path/filepath
+  language: go

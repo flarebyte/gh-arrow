@@ -1,0 +1,13 @@
+locator: internal/diagnostic/error.go
+meta:
+  purpose: "Define stable ARROW error codes and map failures to CLI exit statuses."
+  function_list:
+    - Code
+    - Exit
+    - New
+    - Wrap
+  import_files_list:
+    - errors
+    - fmt
+    - io/fs
+  language: go

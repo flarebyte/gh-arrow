@@ -1,0 +1,26 @@
+locator: internal/github/github_test.go
+meta:
+  purpose: "Verify remote file and discovery behavior with controlled HTTP fixtures."
+  function_list:
+    - TestCanceledRequestsAndMalformedJSON
+    - TestDiscoveryPrivateUserRepositoriesA09A10A17
+    - TestEmptyRepository
+    - TestHTTPFailuresDoNotLeakCredentialsA06
+    - TestMissingTreePayloadIsNotEmptySuccess
+    - TestPaginationAndFailureA06A09
+    - TestRefEncodedAsData
+    - TestRepositoryPinnedReadsA11A16
+    - TestTreeCacheBoundsCumulativeBytes
+    - TestTruncatedTreeA08
+    - fixture
+    - repositoryRoutes
+  import_files_list:
+    - context
+    - fmt
+    - github.com/flarebyte/gh-arrow/internal/diagnostic
+    - github.com/flarebyte/gh-arrow/internal/listing
+    - io
+    - net/http
+    - strings
+    - testing
+  language: go

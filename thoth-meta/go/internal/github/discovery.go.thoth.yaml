@@ -1,0 +1,14 @@
+locator: internal/github/discovery.go
+meta:
+  purpose: "Enumerate owned repositories and discover exact paths with bounded concurrency."
+  function_list: []
+  import_files_list:
+    - context
+    - fmt
+    - github.com/flarebyte/gh-arrow/internal/diagnostic
+    - github.com/flarebyte/gh-arrow/internal/listing
+    - github.com/flarebyte/gh-arrow/internal/source
+    - sort
+    - strings
+    - sync
+  language: go
