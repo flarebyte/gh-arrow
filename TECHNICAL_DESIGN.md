@@ -33,16 +33,46 @@ or interface for every concrete type.
 
 ## Execution flow
 
-The entry point creates a signal-aware context and passes process streams to
-`internal/cli.Runner`. The runner validates arguments before reading configuration
-or credentials; help/version return without either. For file commands, explicit
-mappings select the local backend, otherwise GitHub identities select the remote
-backend. Discovery always uses GitHub. The selected backend supplies bytes or
-entries; the CLI renders results and maps errors to stable codes and exit status.
+The main runtime paths are:
 
-New command wiring belongs in `internal/cli`, backend operations in their owning
-packages, and shared pattern/output rules in `internal/listing`. Keep tests next
-to those boundaries and reference acceptance scenarios when behavior changes.
+```mermaid
+flowchart TD
+    Entry["cmd/gh-arrow: signal context and process streams"] --> CLI["internal/cli: parse, route, render"]
+    CLI --> Source["internal/source: validate explicit identities"]
+    CLI --> Config["internal/config: load mappings"]
+    CLI --> Backend{"File source"}
+    Backend -->|mapped working tree| Local["internal/local: confined file access"]
+    Backend -->|unmapped GitHub identity| GitHub["internal/github: gh credentials, API and trees"]
+    CLI -->|discovery| GitHub
+    CLI -->|cp destination| Copy["internal/local: staged copy publication"]
+    Local --> Listing["internal/listing: shared glob and output rules"]
+    GitHub --> Listing
+    CLI --> Listing
+    CLI --> Diagnostics["internal/diagnostic: error codes and exit status"]
+```
+
+The entry point calls `Runner.Run` in [internal/cli/run.go](internal/cli/run.go).
+Arguments are validated before configuration or credentials are read;
+help/version return without either. For example, `cat local:project:README.md`
+parses the source, resolves its explicit mapping, opens the local file, and
+streams its exact bytes to stdout. A missing mapped file fails without remote
+fallback. Discovery takes the direct GitHub path shown above.
+
+To extend behavior, start with the relevant boundary:
+
+| Change | Implementation and focused tests |
+| --- | --- |
+| Command syntax, routing, or rendering | [internal/cli](internal/cli); CLI acceptance tests live here |
+| Source identities or path validation | [internal/source](internal/source), including parsing fuzz tests |
+| Mapping schema or configuration loading | [internal/config](internal/config), including the embedded schema and loading tests |
+| Filesystem reads or copy publication | [internal/local](internal/local), including platform-specific regression tests |
+| Remote reads or repository discovery | [internal/github](internal/github), using HTTP and credential fixtures |
+| Shared glob or listing semantics | [internal/listing](internal/listing), including matching fuzz tests |
+| Stable failure classification | [internal/diagnostic](internal/diagnostic) and its exit-status tests |
+
+Keep the shared `backend` interface at its CLI consumer and reference acceptance
+scenario IDs when changing behavior. See [Contributing](CONTRIBUTING.md#write-tests-first)
+for the test-first workflow.
 
 ## Safety and consistency
 
