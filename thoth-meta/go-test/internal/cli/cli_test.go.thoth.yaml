@@ -1,0 +1,22 @@
+locator: internal/cli/cli_test.go
+meta:
+  purpose: "Exercise local CLI acceptance contracts, argument validation, exact bytes, and deterministic output."
+  function_list:
+    - TestCatTreatsFilenameMetacharactersLiterally
+    - TestEscapedFilenamesA18
+    - TestLocalCommandsAndNoFallbackA01A02A13
+    - TestOutputFailure
+    - TestUsageAndHelpOfflineA04
+    - TestVersionOfflineA19
+    - localFixture
+  import_files_list:
+    - bytes
+    - context
+    - errors
+    - fmt
+    - github.com/flarebyte/gh-arrow/internal/github
+    - os
+    - path/filepath
+    - strings
+    - testing
+  language: go

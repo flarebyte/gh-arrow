@@ -12,3 +12,8 @@ if gh flarebyte --version >/dev/null 2>&1; then
 else
     printf 'gh-flarebyte=false\n'
 fi
+if gh arrow --help >/dev/null 2>&1; then
+    printf 'gh-arrow=true\n'
+else
+    printf 'gh-arrow=false\n'
+fi

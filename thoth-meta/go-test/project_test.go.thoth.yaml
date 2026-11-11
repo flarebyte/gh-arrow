@@ -1,0 +1,9 @@
+locator: project_test.go
+meta:
+  purpose: "Verify embedded version availability and safe fallback for invalid metadata."
+  function_list:
+    - TestEmbeddedVersion
+    - TestInvalidVersionMetadata
+  import_files_list:
+    - testing
+  language: go

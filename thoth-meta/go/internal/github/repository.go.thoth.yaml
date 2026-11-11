@@ -1,0 +1,18 @@
+locator: internal/github/repository.go
+meta:
+  purpose: "Resolve remote file operations against pinned Git trees and stream regular-file blobs."
+  function_list:
+    - isMissing
+    - kind
+  import_files_list:
+    - context
+    - errors
+    - github.com/flarebyte/gh-arrow/internal/diagnostic
+    - github.com/flarebyte/gh-arrow/internal/listing
+    - github.com/flarebyte/gh-arrow/internal/source
+    - io
+    - io/fs
+    - net/url
+    - path
+    - strings
+  language: go

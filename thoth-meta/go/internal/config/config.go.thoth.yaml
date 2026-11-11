@@ -1,0 +1,19 @@
+locator: internal/config/config.go
+meta:
+  purpose: "Load explicit global CUE mappings through a closed embedded schema with sanitized failures."
+  function_list:
+    - Load
+  import_files_list:
+    - cuelang.org/go/cue
+    - cuelang.org/go/cue/ast
+    - cuelang.org/go/cue/cuecontext
+    - cuelang.org/go/cue/parser
+    - embed
+    - errors
+    - github.com/flarebyte/gh-arrow/internal/diagnostic
+    - github.com/flarebyte/gh-arrow/internal/source
+    - io
+    - os
+    - path/filepath
+    - strings
+  language: go

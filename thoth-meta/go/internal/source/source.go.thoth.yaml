@@ -1,0 +1,15 @@
+locator: internal/source/source.go
+meta:
+  purpose: "Parse explicit source identities and validate aliases, repository names, and relative paths."
+  function_list:
+    - Parse
+    - ValidAlias
+    - ValidOwner
+    - ValidRepository
+    - ValidatePath
+  import_files_list:
+    - github.com/flarebyte/gh-arrow/internal/diagnostic
+    - regexp
+    - strings
+    - unicode/utf8
+  language: go

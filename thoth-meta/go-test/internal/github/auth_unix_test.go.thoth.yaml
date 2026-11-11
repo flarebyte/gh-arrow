@@ -1,0 +1,14 @@
+locator: internal/github/auth_unix_test.go
+meta:
+  purpose: "Verify noninteractive gh credential lookup and credential transport boundaries using a fake executable."
+  function_list:
+    - TestGHCredentialsAndRedirectBoundary
+  import_files_list:
+    - context
+    - io
+    - net/http
+    - os
+    - path/filepath
+    - strings
+    - testing
+  language: go

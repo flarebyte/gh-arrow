@@ -1,0 +1,12 @@
+locator: internal/cli/args.go
+meta:
+  purpose: "Validate command arguments before configuration or credential access."
+  function_list:
+    - parse
+    - usage
+  import_files_list:
+    - github.com/flarebyte/gh-arrow/internal/diagnostic
+    - github.com/flarebyte/gh-arrow/internal/listing
+    - github.com/flarebyte/gh-arrow/internal/source
+    - strings
+  language: go

@@ -1,0 +1,10 @@
+locator: internal/diagnostic/error_test.go
+meta:
+  purpose: "Verify stable diagnostic classification and exit status behavior."
+  function_list:
+    - TestStableCodesAndExitStatus
+  import_files_list:
+    - errors
+    - io/fs
+    - testing
+  language: go

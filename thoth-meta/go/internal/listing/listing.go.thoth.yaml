@@ -1,0 +1,16 @@
+locator: internal/listing/listing.go
+meta:
+  purpose: "Share glob matching, sorted listing behavior, and safe text path rendering across backends."
+  function_list:
+    - Escape
+    - Parse
+    - match
+  import_files_list:
+    - github.com/flarebyte/gh-arrow/internal/diagnostic
+    - github.com/flarebyte/gh-arrow/internal/source
+    - path
+    - sort
+    - strconv
+    - strings
+    - unicode
+  language: go

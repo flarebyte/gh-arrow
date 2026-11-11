@@ -1,0 +1,14 @@
+locator: internal/local/platform_windows.go
+meta:
+  purpose: "Implement Windows root-relative file opens and private destination ACLs."
+  function_list:
+    - openHandle
+    - openRelative
+    - temporaryFile
+  import_files_list:
+    - golang.org/x/sys/windows
+    - os
+    - path/filepath
+    - runtime
+    - unsafe
+  language: go

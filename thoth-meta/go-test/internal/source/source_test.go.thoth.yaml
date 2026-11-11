@@ -1,0 +1,9 @@
+locator: internal/source/source_test.go
+meta:
+  purpose: "Verify explicit source parsing and path validation with examples and fuzz inputs."
+  function_list:
+    - FuzzParse
+    - TestParseA04
+  import_files_list:
+    - testing
+  language: go

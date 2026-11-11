@@ -39,3 +39,6 @@ go.work.sum
 
 # Python tooling
 __pycache__/
+
+# Thoth debug envelopes
+/temp/

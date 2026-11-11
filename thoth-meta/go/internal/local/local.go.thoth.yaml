@@ -1,0 +1,18 @@
+locator: internal/local/local.go
+meta:
+  purpose: "Read and enumerate mapped working trees through confined filesystem operations."
+  function_list:
+    - New
+  import_files_list:
+    - context
+    - fmt
+    - github.com/flarebyte/gh-arrow/internal/diagnostic
+    - github.com/flarebyte/gh-arrow/internal/listing
+    - github.com/flarebyte/gh-arrow/internal/source
+    - io
+    - os
+    - path
+    - path/filepath
+    - strings
+    - unicode/utf8
+  language: go

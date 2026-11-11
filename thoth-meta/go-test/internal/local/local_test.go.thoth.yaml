@@ -1,0 +1,21 @@
+locator: internal/local/local_test.go
+meta:
+  purpose: "Verify mapped local file access, listing, and safe copy behavior with temporary fixtures."
+  function_list:
+    - TestConcurrentNoClobberA05
+    - TestCopyA05A14
+    - TestReadAndListA01A07A12
+    - TestRootDirectoryListingRegressionPR3
+  import_files_list:
+    - bytes
+    - context
+    - errors
+    - github.com/flarebyte/gh-arrow/internal/diagnostic
+    - github.com/flarebyte/gh-arrow/internal/listing
+    - io
+    - os
+    - path/filepath
+    - reflect
+    - sync
+    - testing
+  language: go

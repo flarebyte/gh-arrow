@@ -1,0 +1,11 @@
+locator: internal/local/platform_unix.go
+meta:
+  purpose: "Implement Unix descriptor-relative opens and private copy publication primitives."
+  function_list:
+    - openRelative
+    - temporaryFile
+  import_files_list:
+    - golang.org/x/sys/unix
+    - os
+    - strings
+  language: go

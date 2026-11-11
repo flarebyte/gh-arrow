@@ -3,6 +3,13 @@
 GO := go
 PYTHON := python3
 FLAREBYTE := gh flarebyte
+
+# Pending review and publication in baldrick-reserve; set a verified full SHA later.
+RESERVE_REF :=
+export RESERVE_REF
+RESERVE_GO := github:flarebyte:baldrick-reserve:shared/go/all/pipeline-go-maat.thoth.cue
+RESERVE_GO_TEST := github:flarebyte:baldrick-reserve:shared/go/all/pipeline-go-test-maat.thoth.cue
+RESERVE_TS_E2E := github:flarebyte:baldrick-reserve:shared/typescript/cli/pipeline-ts-e2e-maat.thoth.cue
 export GOTOOLCHAIN := auto
 export GOCACHE := $(CURDIR)/.gocache
 export GOMODCACHE := $(CURDIR)/.gomodcache
@@ -26,7 +33,7 @@ test-go: ## Run configured Go tests.
 test-race: ## Run Go tests with the race detector.
 	$(GO) test -race ./...
 
-test-scripts: ## Test release preflight and artifact staging offline.
+test-scripts: ## Test release tooling and reserve sync recipes offline.
 	$(PYTHON) -m unittest discover -s scripts -p 'test_*.py'
 
 smoke: build-go ## Check offline help, binary file operations, and listings.
@@ -64,8 +71,48 @@ check-tools: ## Report availability of development tools.
 	@sh scripts/check-tools.sh
 
 install-tools-help: ## Show tool setup guidance without installing anything.
-	@printf '%s\n' 'Go 1.25+ (module toolchain: 1.27.3): https://go.dev/doc/install' 'GitHub CLI: https://cli.github.com/' 'gh extension install flarebyte/gh-flarebyte --pin v0.24.0' 'Python 3.11+: https://www.python.org/downloads/' 'flyb (documentation generation): install the flyb CLI.'
+	@printf '%s\n' 'Go 1.25+ (module toolchain: 1.27.4): https://go.dev/doc/install' 'GitHub CLI: https://cli.github.com/' 'gh extension install flarebyte/gh-flarebyte --pin v0.24.0' 'Python 3.11+: https://www.python.org/downloads/' 'flyb (documentation generation): install the flyb CLI.'
 
 help: ## Show installation guidance and development targets.
 	@printf '%s\n' 'Install: gh extension install flarebyte/gh-arrow' 'Pinned:  gh extension install flarebyte/gh-arrow --pin v0.1.0' '' 'Development targets (from a checkout):'
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z0-9_.-]+:.*## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+# Sync is explicit and never a prerequisite of development checks.
+.PHONY: reserve-check reserve-sync reserve-ref-check reserve-check-go reserve-sync-go reserve-check-go-test reserve-sync-go-test reserve-check-ts-e2e reserve-sync-ts-e2e
+
+reserve-check: reserve-check-go reserve-check-go-test reserve-check-ts-e2e ## Check pinned reserve configs for drift without changing them.
+
+reserve-sync: reserve-sync-go reserve-sync-go-test reserve-sync-ts-e2e ## Replace the three listed Thoth configs with pinned reserve copies.
+
+reserve-ref-check:
+	@$(PYTHON) scripts/check_reserve_ref.py
+
+# Managed mapping: $(RESERVE_GO) -> pipeline-go-maat.thoth.cue
+reserve-check-go: reserve-ref-check
+	@set -eu; staged=$$(mktemp); trap 'rm -f "$$staged"' EXIT HUP INT TERM; \
+	gh arrow cat '$(RESERVE_GO)' --config .config/reserve-arrow.cue --ref '$(RESERVE_REF)' > "$$staged"; \
+	test ! -L ./pipeline-go-maat.thoth.cue; \
+	diff -u ./pipeline-go-maat.thoth.cue "$$staged"
+
+reserve-sync-go: reserve-ref-check
+	gh arrow cp '$(RESERVE_GO)' ./pipeline-go-maat.thoth.cue --config .config/reserve-arrow.cue --ref '$(RESERVE_REF)' --force
+
+# Managed mapping: $(RESERVE_GO_TEST) -> pipeline-go-test-maat.thoth.cue
+reserve-check-go-test: reserve-ref-check
+	@set -eu; staged=$$(mktemp); trap 'rm -f "$$staged"' EXIT HUP INT TERM; \
+	gh arrow cat '$(RESERVE_GO_TEST)' --config .config/reserve-arrow.cue --ref '$(RESERVE_REF)' > "$$staged"; \
+	test ! -L ./pipeline-go-test-maat.thoth.cue; \
+	diff -u ./pipeline-go-test-maat.thoth.cue "$$staged"
+
+reserve-sync-go-test: reserve-ref-check
+	gh arrow cp '$(RESERVE_GO_TEST)' ./pipeline-go-test-maat.thoth.cue --config .config/reserve-arrow.cue --ref '$(RESERVE_REF)' --force
+
+# Managed mapping: $(RESERVE_TS_E2E) -> pipeline-ts-e2e-maat.thoth.cue
+reserve-check-ts-e2e: reserve-ref-check
+	@set -eu; staged=$$(mktemp); trap 'rm -f "$$staged"' EXIT HUP INT TERM; \
+	gh arrow cat '$(RESERVE_TS_E2E)' --config .config/reserve-arrow.cue --ref '$(RESERVE_REF)' > "$$staged"; \
+	test ! -L ./pipeline-ts-e2e-maat.thoth.cue; \
+	diff -u ./pipeline-ts-e2e-maat.thoth.cue "$$staged"
+
+reserve-sync-ts-e2e: reserve-ref-check
+	gh arrow cp '$(RESERVE_TS_E2E)' ./pipeline-ts-e2e-maat.thoth.cue --config .config/reserve-arrow.cue --ref '$(RESERVE_REF)' --force
