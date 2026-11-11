@@ -27,7 +27,8 @@ Python scripts and embedded CUE schemas are outside these pipelines' coverage.
 
 ## Refresh
 
-Run from the repository root with `thoth`, Node.js, and npm available:
+Run from the repository root with `thoth`, `/bin/sh`, Node.js 24+, and npm/npx
+available:
 
 ```sh
 thoth run --config pipeline-go-maat.thoth.cue
@@ -39,6 +40,10 @@ not version-pinned. Debug envelopes are written to `temp/`; durable summaries
 are the YAML files here. Inspect debug records for shell errors because the
 configs keep going on errors and substitute empty lists for missing rule output.
 Preserve curated purpose fields on refresh.
+
+The configs themselves are canonical in `baldrick-reserve`; see the
+[contributor sync workflow](../CONTRIBUTING.md#refresh-code-analysis) for checking
+or replacing the local copies. Syncing configs does not regenerate metadata.
 
 Initial generation checked all 27 records for successful analyzer exit status,
 empty stderr, and Go language output. No source behavior was changed.
