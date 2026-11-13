@@ -2,8 +2,11 @@ locator: internal/local/copy.go
 meta:
   purpose: "Stage complete file copies and publish destinations with atomic no-clobber or replacement semantics."
   function_list:
+    - CheckParent
     - Copy
+    - CopyWithin
     - Stream
+    - copyInto
   import_files_list:
     - context
     - crypto/rand

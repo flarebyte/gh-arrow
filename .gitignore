@@ -42,3 +42,4 @@ __pycache__/
 
 # Thoth debug envelopes
 /temp/
+.aider*

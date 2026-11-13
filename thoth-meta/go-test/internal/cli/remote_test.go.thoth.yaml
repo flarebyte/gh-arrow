@@ -4,6 +4,7 @@ meta:
   function_list:
     - TestDiscoveryIgnoresMappingsA10A13
     - TestRemoteCommandContractsA06A11A16
+    - TestSyncResolvesDefaultBranchOnceA26
     - remoteFixture
   import_files_list:
     - bytes

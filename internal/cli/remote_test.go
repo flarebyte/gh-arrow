@@ -91,3 +91,44 @@ func TestDiscoveryIgnoresMappingsA10A13(t *testing.T) {
 		t.Fatal(code, out.String(), err.String())
 	}
 }
+
+func TestSyncResolvesDefaultBranchOnceA26(t *testing.T) {
+	_, config := localFixture(t)
+	project := t.TempDir()
+	manifest := filepath.Join(project, "sync.gh-arrow.cue")
+	if err := os.WriteFile(manifest, []byte(`version:1,files:[{source:"github:remote:repo:a",destination:"a"},{source:"github:remote:repo:b",destination:"b"}]`), 0600); err != nil {
+		t.Fatal(err)
+	}
+	requests := map[string]int{}
+	r := Runner{NewRemote: func(context.Context) (*github.Client, error) {
+		return &github.Client{HTTP: &http.Client{Transport: httpTransport(func(req *http.Request) (*http.Response, error) {
+			url := req.URL.RequestURI()
+			requests[url]++
+			routes := map[string]string{
+				"/repos/remote/repo": `{"default_branch":"active"}`,
+				"/repos/remote/repo/commits?per_page=1&sha=active": `[{"sha":"pinned","commit":{"tree":{"sha":"root"}}}]`,
+				"/repos/remote/repo/git/trees/root":                `{"tree":[{"path":"a","type":"blob","mode":"100644","sha":"one"},{"path":"b","type":"blob","mode":"100644","sha":"two"}]}`,
+				"/repos/remote/repo/git/blobs/one":                 "first\n",
+				"/repos/remote/repo/git/blobs/two":                 "second\n",
+			}
+			body, ok := routes[url]
+			if !ok {
+				t.Errorf("unexpected request %s", url)
+			}
+			return &http.Response{StatusCode: 200, Header: make(http.Header), Body: io.NopCloser(strings.NewReader(body))}, nil
+		})}}, nil
+	}}
+	var out, stderr bytes.Buffer
+	if code := r.Run(context.Background(), []string{"sync", "--file", manifest, "--config", config}, &out, &stderr); code != 0 {
+		t.Fatal(code, out.String(), stderr.String())
+	}
+	if requests["/repos/remote/repo"] != 1 || requests["/repos/remote/repo/commits?per_page=1&sha=active"] != 1 {
+		t.Fatal(requests)
+	}
+	for name, want := range map[string]string{"a": "first\n", "b": "second\n"} {
+		data, err := os.ReadFile(filepath.Join(project, name))
+		if err != nil || string(data) != want {
+			t.Fatal(name, string(data), err)
+		}
+	}
+}

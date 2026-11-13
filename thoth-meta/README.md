@@ -4,8 +4,8 @@ The existing pipelines were reviewed before generation and left unchanged.
 
 | Pipeline | Relevance | Generated coverage |
 | --- | --- | --- |
-| `pipeline-go-maat.thoth.cue` | Relevant | 15 production Go files, including the entry point, embedded version metadata, and internal packages |
-| `pipeline-go-test-maat.thoth.cue` | Relevant | 12 Go test files, including CLI acceptance tests and platform-specific regressions |
+| `pipeline-go-maat.thoth.cue` | Relevant | 18 production Go files, including the entry point, embedded version metadata, sync orchestration and manifest validation |
+| `pipeline-go-test-maat.thoth.cue` | Relevant | 14 Go test files, including sync acceptance/diff tests and platform-specific regressions |
 | `pipeline-ts-e2e-maat.thoth.cue` | No matching inputs | No `e2e/*.test.ts` or `e2e/*.suite.ts` files exist; pipeline skipped |
 
 Executable smoke coverage exists in `scripts/smoke.py`; release-tooling tests are
@@ -39,11 +39,11 @@ The configs invoke `npx maat-ostraca`, which may require registry access and is
 not version-pinned. Debug envelopes are written to `temp/`; durable summaries
 are the YAML files here. Inspect debug records for shell errors because the
 configs keep going on errors and substitute empty lists for missing rule output.
-Preserve curated purpose fields on refresh.
+Preserve curated purpose fields on refresh and add purposes for newly discovered files.
 
 The configs themselves are canonical in `baldrick-reserve`; see the
 [contributor sync workflow](../CONTRIBUTING.md#refresh-code-analysis) for checking
 or replacing the local copies. Syncing configs does not regenerate metadata.
 
-Initial generation checked all 27 records for successful analyzer exit status,
+The latest refresh checked all 32 records for successful analyzer exit status,
 empty stderr, and Go language output. No source behavior was changed.

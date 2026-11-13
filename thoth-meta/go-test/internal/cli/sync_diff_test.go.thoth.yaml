@@ -1,0 +1,9 @@
+locator: internal/cli/sync_diff_test.go
+meta:
+  purpose: "Verify unified diff ranges, surrounding context, and missing-newline markers."
+  function_list:
+    - TestUnifiedDiffRangesAndNewlines
+  import_files_list:
+    - bytes
+    - testing
+  language: go

@@ -1,0 +1,23 @@
+locator: internal/cli/sync.go
+meta:
+  purpose: "Plan and apply declarative file synchronisation with shared comparisons, staged sources, and deterministic audit output."
+  function_list:
+    - stageSync
+  import_files_list:
+    - context
+    - crypto/sha256
+    - errors
+    - fmt
+    - github.com/flarebyte/gh-arrow/internal/config
+    - github.com/flarebyte/gh-arrow/internal/diagnostic
+    - github.com/flarebyte/gh-arrow/internal/github
+    - github.com/flarebyte/gh-arrow/internal/listing
+    - github.com/flarebyte/gh-arrow/internal/local
+    - github.com/flarebyte/gh-arrow/internal/source
+    - github.com/flarebyte/gh-arrow/internal/syncmanifest
+    - io
+    - io/fs
+    - os
+    - path/filepath
+    - strings
+  language: go

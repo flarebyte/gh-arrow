@@ -1,0 +1,22 @@
+locator: internal/cli/sync_test.go
+meta:
+  purpose: "Verify sync lifecycle, no-write audits, binary preservation, fetch-failure safety, manifest validation, and destination constraints."
+  function_list:
+    - TestSyncDefaultManifestEmptyAndBinaryDiff
+    - TestSyncDiffMissingEmptyFile
+    - TestSyncFetchFailurePreservesAllA23
+    - TestSyncFlags
+    - TestSyncInvalidManifestA24
+    - TestSyncLifecycleA22
+    - TestSyncRejectsNonFilesA25
+    - syncFixture
+  import_files_list:
+    - bytes
+    - context
+    - fmt
+    - github.com/flarebyte/gh-arrow/internal/github
+    - os
+    - path/filepath
+    - strings
+    - testing
+  language: go

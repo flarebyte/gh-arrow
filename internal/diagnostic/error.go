@@ -39,6 +39,8 @@ func Exit(err error) int {
 		return 0
 	}
 	switch Code(err) {
+	case "ARROW_DRIFT":
+		return 3
 	case "ARROW_USAGE", "ARROW_CONFIG":
 		return 2
 	default:

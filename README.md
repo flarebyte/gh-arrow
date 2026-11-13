@@ -1,6 +1,6 @@
 # gh-arrow
 
-A Go GitHub CLI extension to copy, display, and discover files in GitHub repositories and mapped local projects. Invoke it as `gh arrow`.
+A Go GitHub CLI extension to copy, display, synchronise, and discover files in GitHub repositories and mapped local projects. Invoke it as `gh arrow`.
 
 ## Install
 
@@ -38,7 +38,7 @@ Sources use `github:<owner>:<repo>:<path>` or `local:<alias>:<path>`. Paths use 
 
 GitHub sources prefer configured local working trees. A mapping deliberately selects local files: missing mapped files fail without a remote fallback. `--ref` selects a remote branch, tag, or commit and is rejected for mapped sources and discovery.
 
-Mappings are loaded from the global CUE file `~/.gh-arrow`, or from `--config <path>`. Arrow never discovers configuration in a checkout. Roots must be absolute local paths. A missing default config means no mappings; a missing explicitly selected config is an error. No separate CUE executable is needed.
+Mappings are loaded from the global CUE file `~/.gh-arrow`, or from `--config <path>`. Arrow never discovers repository mappings in a checkout; sync reads its separate project manifest. Roots must be absolute local paths. A missing default config means no mappings; a missing explicitly selected config is an error. No separate CUE executable is needed.
 
 ```cue
 local: mappings: [{
@@ -53,7 +53,48 @@ Remote access uses GitHub.com and existing gh credentials. For private repositor
 
 `cp` copies one file, requires an existing destination parent, and refuses an existing destination unless `--force` is given. It stages complete bytes before publication and rejects symlink destinations. Source permissions and timestamps are not copied; new files use private permissions.
 
-`cat` writes exact bytes, with no added newline. Successful `cp` writes no stdout. Listings are sorted; text escapes control characters, while `--json` preserves Unicode path values. JSON listings are arrays, including `[]` for no matches; discovery records additionally contain `repository`. Diagnostics go to stderr with stable `ARROW_*` codes. Exit status is 0 for success, 1 for I/O/network/authentication failures, and 2 for invalid arguments or configuration.
+`cat` writes exact bytes, with no added newline. Successful `cp` writes no stdout. Listings are sorted; text escapes control characters, while `--json` preserves Unicode path values. JSON listings are arrays, including `[]` for no matches; discovery records additionally contain `repository`. Diagnostics go to stderr with stable `ARROW_*` codes. Exit status is 0 for success, 1 for I/O/network/authentication failures, 2 for invalid arguments or configuration, and 3 for `sync check` drift.
+
+## Synchronise project files
+
+Declare the files your project consumes in `sync.gh-arrow.cue`:
+
+```cue
+version: 1
+files: [{
+    source:      "github:owner:project:path/to/file.yaml"
+    destination: "local.yaml"
+}]
+```
+
+Run from that project directory:
+
+```sh
+gh arrow sync status          # List unchanged, modified, or missing files
+gh arrow sync diff            # Review local-to-upstream differences
+gh arrow sync --dry-run       # Preview without writing
+gh arrow sync                 # Create missing files and replace changed files
+gh arrow sync check --json    # Audit: exit 0 when in sync, 3 for drift
+```
+
+Use `--file <path>` to select another manifest. Destinations are relative to its
+directory; parents must already exist. Sync handles exact files only, rejects
+symlinks, traversal and duplicate destinations, and never deletes undeclared files.
+A declaration authorises replacement of local edits; sync does not merge.
+
+Mapped sources read the current working tree, including uncommitted changes;
+unmapped GitHub sources read the current default branch. Sync does not accept
+`ref` or `--ref`. Each remote repository resolves once per run. `--config` still
+selects machine-local repository mappings; status output identifies the selected
+`local` or `github` backend. `--json` is available for status, check, dry-run and
+apply; records contain `source`, `destination`, `status`, and `backend`, sorted
+by destination. Apply reports the statuses observed before writing.
+
+All sources are staged before any destination changes. Each changed file is
+replaced atomically; publication failure can leave earlier files applied, with
+the applied count in the diagnostic. Binary differences and missing empty files receive a notice;
+text diffs use a unified replacement hunk with three lines of surrounding context.
+Files exceeding 8 MiB per side receive a difference notice instead of a patch.
 
 ## Documentation
 

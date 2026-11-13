@@ -1,7 +1,7 @@
 # Technical design
 
 The [specification](doc/design/specification.md) defines command behavior. Tests
-reference its acceptance IDs (A01–A19); changes should begin with a failing test.
+reference its acceptance IDs (A01–A26); changes should begin with a failing test.
 The commands are implemented; see the [README](README.md) for usage and
 [Contributing](CONTRIBUTING.md) for setup and check commands.
 
@@ -13,6 +13,7 @@ The commands are implemented; see the [README](README.md) for usage and
 | `internal/cli` | Argument validation, orchestration, and output rendering |
 | `internal/source` | Explicit source identities and repository-relative paths |
 | `internal/config` | Global, schema-validated CUE mappings |
+| `internal/syncmanifest` | Closed CUE project file mappings and destination validation |
 | `internal/local` | Descriptor-relative reads, filesystem traversal, staged copies |
 | `internal/github` | gh credentials, HTTP errors, pinned Git trees, discovery |
 | `internal/listing` | Shared glob matching, sorting, and text escaping |
@@ -109,6 +110,12 @@ it still exits nonzero. Text listings escape control characters; JSON retains
 the corresponding Unicode paths. Local non-UTF-8 filenames fail enumeration
 rather than being silently rewritten in JSON.
 
+Sync planning in `internal/cli/sync.go` stages upstream bytes in private temporary
+files and hashes destinations before publication. Backends are reused per source
+root or remote repository so a default branch resolves once per run. Sync writes
+through a pinned project root with `local.CopyWithin`; each replacement is atomic
+but a batch is not transactional. Diff rendering is bounded to 8 MiB per side.
+
 ## Bounds and cancellation
 
 - Config: 1 MiB; each decoded API metadata response: 64 MiB.
@@ -143,5 +150,6 @@ Enterprise hosts remain outside v1.
 
 Configuration defaults to `~/.gh-arrow`, resolved with `os.UserHomeDir`. An embedded
 closed CUE schema validates a single file; imports are rejected before evaluation.
-No module, directory, network, or environment loading is used. CUE diagnostics and
+No module, directory, network, or environment loading is used. Sync independently
+loads `./sync.gh-arrow.cue` or `--file` with the same 1 MiB and no-import bounds. CUE diagnostics and
 configuration I/O errors are sanitized to avoid exposing values and paths.
