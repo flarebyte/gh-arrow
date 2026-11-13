@@ -146,11 +146,14 @@ func (r Runner) sync(ctx context.Context, o options, c config.Config, out io.Wri
 			if item.record.Status == "unchanged" {
 				continue
 			}
-			f, err := os.Open(item.staged)
-			if err == nil {
-				err = local.CopyWithin(ctx, root, f, item.record.Destination)
-				f.Close()
-			}
+			err = func() error {
+				f, openErr := os.Open(item.staged)
+				if openErr != nil {
+					return openErr
+				}
+				defer f.Close()
+				return local.CopyWithin(ctx, root, f, item.record.Destination)
+			}()
 			if err != nil {
 				return fmt.Errorf("apply %s after %d file(s) applied; partial application possible: %w", item.record.Destination, applied, err)
 			}
