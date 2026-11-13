@@ -1,12 +1,12 @@
 package cli
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"os"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 
 	"github.com/flarebyte/gh-arrow/internal/listing"
@@ -55,7 +55,7 @@ func syncDiff(ctx context.Context, current *local.Backend, items []syncItem, out
 			_, err = fmt.Fprintf(out, "Empty file %s is missing locally\n", newLabel)
 		} else if len(before) > diffLimit || len(after) > diffLimit {
 			_, err = fmt.Fprintf(out, "Files %s and %s differ (8 MiB diff display limit)\n", oldLabel, newLabel)
-		} else if bytes.ContainsRune(before, 0) || bytes.ContainsRune(after, 0) || !utf8.Valid(before) || !utf8.Valid(after) {
+		} else if !diffTextSafe(before) || !diffTextSafe(after) {
 			_, err = fmt.Fprintf(out, "Binary files %s and %s differ\n", oldLabel, newLabel)
 		} else {
 			err = unifiedDiff(out, oldLabel, newLabel, before, after)
@@ -65,6 +65,29 @@ func syncDiff(ctx context.Context, current *local.Backend, items []syncItem, out
 		}
 	}
 	return nil
+}
+
+// diffTextSafe preserves ordinary text bytes while keeping terminal commands
+// and invisible formatting controls out of patch output. CR is safe only in CRLF.
+func diffTextSafe(data []byte) bool {
+	if !utf8.Valid(data) {
+		return false
+	}
+	for i, r := range string(data) {
+		switch r {
+		case '\t', '\n':
+			continue
+		case '\r':
+			if i+1 < len(data) && data[i+1] == '\n' {
+				continue
+			}
+			return false
+		}
+		if unicode.IsControl(r) || unicode.Is(unicode.Cf, r) {
+			return false
+		}
+	}
+	return true
 }
 
 // A single replacement hunk trims common prefix/suffix and keeps three context

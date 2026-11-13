@@ -2,11 +2,11 @@ locator: internal/cli/sync_diff.go
 meta:
   purpose: "Render bounded local-to-upstream unified diffs and notices for binary, oversized, or missing empty files."
   function_list:
+    - diffTextSafe
     - readDiff
     - syncDiff
     - unifiedDiff
   import_files_list:
-    - bytes
     - context
     - fmt
     - github.com/flarebyte/gh-arrow/internal/listing
@@ -14,5 +14,6 @@ meta:
     - io
     - os
     - strings
+    - unicode
     - unicode/utf8
   language: go

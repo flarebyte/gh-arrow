@@ -92,7 +92,7 @@ by destination. Apply reports the statuses observed before writing.
 
 All sources are staged before any destination changes. Each changed file is
 replaced atomically; publication failure can leave earlier files applied, with
-the applied count in the diagnostic. Binary differences and missing empty files receive a notice;
+the applied count in the diagnostic. Binary differences, text containing unsafe terminal controls, and missing empty files receive a notice;
 text diffs use a unified replacement hunk with three lines of surrounding context.
 Files exceeding 8 MiB per side receive a difference notice instead of a patch.
 

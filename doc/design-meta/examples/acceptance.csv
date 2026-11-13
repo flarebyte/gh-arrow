@@ -25,3 +25,4 @@ A23,A later upstream file fails during sync planning,Exit 1 with no success outp
 A24,Sync manifest has traversal absolute duplicate or overlapping destinations unknown ref wildcard source imports or self-overwrite,Exit 2 before fetching or changing files.,files.sync
 A25,Sync source is a directory or destination has symlink components or missing parent,Exit 1 without changing destinations or creating directories.,files.sync
 A26,Several sync sources share one remote repository while its default branch moves,Resolve the repository once and use the same commit for all files; mapped sources use current working-tree bytes.,files.sync
+A27,Sync diff encounters ESC BEL backspace DEL C1 Unicode format controls or bare CR in either file or context,Emit a safe binary difference notice; preserve ordinary Unicode tabs and CRLF text in patches.,files.sync
