@@ -18,6 +18,10 @@ Generated from doc/design-meta; edit the source and regenerate.
 | Override the default ~/.gh-arrow CUE mapping file. | config | C06 | gh arrow <command> --config <path> |
 | Select a remote branch tag or commit; reject for mapped sources and organization discovery in v1. | source | C07 | gh arrow <command> --ref <ref> |
 | Report the embedded project version and available commit metadata without config or network access. | extension | C08 | gh arrow --version |
+| Apply file mappings from ./sync.gh-arrow.cue; preview without writing with --dry-run. | files.sync | C09 | gh arrow sync [--file <path>] [--dry-run] [--json] |
+| Report missing modified or unchanged destinations. | files.sync | C10 | gh arrow sync status [--file <path>] [--json] |
+| Show local-to-upstream unified text diffs and binary difference notices. | files.sync | C11 | gh arrow sync diff [--file <path>] |
+| Audit drift without writes; exit 3 for missing or modified files. | files.sync | C12 | gh arrow sync check [--file <path>] [--json] |
 
 #### Mapping configuration
 
@@ -44,6 +48,24 @@ export const sourceExample: SourceListing[] = [{ path: "guide.md" }];
 export const discoveryExample: DiscoveryListing[] = [
   { repository: "tools-org/example", path: "README.md" },
 ];
+```
+
+#### Project sync manifest
+
+```cue
+// Project file mappings; destinations are relative to this manifest.
+// Sources use mapped working trees or the remote default branch.
+version: 1
+files: [
+    {
+        source: "github:owner:project:path/to/file.yaml"
+        destination: "local.yaml"
+    },
+    {
+        source: "github:owner:standards:configs/lint.yaml"
+        destination: ".config/lint.yaml"
+    },
+]
 ```
 
 #### Usage examples
@@ -75,6 +97,7 @@ export const discoveryExample: DiscoveryListing[] = [
 | Directory listing and glob patterns | files.list | files |
 | Organization or user repository discovery | discovery |  |
 | Human and agent interaction contracts | automation |  |
+| Declarative one-way project file synchronisation | files.sync | files |
 
 #### Open questions
 
@@ -98,6 +121,7 @@ export const discoveryExample: DiscoveryListing[] = [
 | source | Prefer explicit local mappings; never fall back remotely after a mapped file is missing. | D04 | A local mapping deliberately selects the working tree. | accepted | Clarifies the original missing-local-file edge case. |
 | extension | Use the current hosted repository name gh-arrow for the extension and executable. | D05 | The repository has been renamed to gh-arrow; align invocation with GitHub extension naming conventions. | accepted | Earlier plan to rename the hosted repository before publication. |
 | config | Use a global ~/.gh-arrow CUE file with an embedded closed schema and no imports. | D08 | Keep machine paths outside project configuration and avoid implicit checkout-controlled mappings. | accepted | No working-directory discovery or legacy format support; --config remains an explicit override. |
+| files.sync | Introduce a separate sync.gh-arrow.cue project manifest with one-way exact-file mappings and no ref selection. | D09 | Projects declare reusable upstream files while machine-local repository mappings remain global. Active means mapped working tree or remote default branch. | accepted | D08 no-checkout-configuration restriction applies to repository mappings; sync explicitly reads a project manifest. |
 
 #### Overview
 
@@ -136,6 +160,12 @@ Packaging follows [Creating GitHub CLI extensions](https://docs.github.com/en/gi
 | extension | Exit 0 with embedded project version; do not read runtime config or credentials. | A19 | Version requested with an absent explicit config and no network access |
 | config | Use only the home mappings; ignore checkout configuration. Explicit --config selects only its named file. | A20 | Global home CUE config and a checkout containing .gh-arrow |
 | config | Exit 2 without exposing configuration values or absolute file paths in diagnostics. | A21 | CUE imports; unknown fields; incomplete values; duplicate mappings; nonabsolute roots |
+| files.sync | Dry-run/status/check preserve destinations; check exits 3 for drift; apply preserves exact bytes; subsequent check exits 0; diff runs local to upstream. | A22 | Sync missing binary and text files then change a destination and audit again |
+| files.sync | Exit 1 with no success output; preserve all destinations; mapped source never falls back remotely. | A23 | A later upstream file fails during sync planning |
+| files.sync | Exit 2 before fetching or changing files. | A24 | Sync manifest has traversal absolute duplicate or overlapping destinations unknown ref wildcard source imports or self-overwrite |
+| files.sync | Exit 1 without changing destinations or creating directories. | A25 | Sync source is a directory or destination has symlink components or missing parent |
+| files.sync | Resolve the repository once and use the same commit for all files; mapped sources use current working-tree bytes. | A26 | Several sync sources share one remote repository while its default branch moves |
+| files.sync | Emit a safe binary difference notice; preserve ordinary Unicode tabs and CRLF text in patches. | A27 | Sync diff encounters ESC BEL backspace DEL C1 Unicode format controls or bare CR in either file or context |
 
 #### Scope limits
 
@@ -146,7 +176,7 @@ Packaging follows [Creating GitHub CLI extensions](https://docs.github.com/en/gi
 | extension | N03 | No custom credential store or authentication flow; use gh credentials. No GitHub Enterprise host support in v1. |
 | discovery | N04 | Discovery does not support recursive globs, license or star filters, or fork deduplication. |
 | discovery | N05 | Remote results reflect API observations and are not guaranteed real-time snapshots across repositories. |
-| automation | N06 | Never overwrite an existing destination without --force. No interactive overwrite confirmation. |
+| automation | N06 | cp never overwrites an existing destination without --force. Sync declarations authorise replacement of listed destinations. No interactive overwrite confirmation. |
 
 #### Behavioral rules
 
@@ -156,7 +186,7 @@ Packaging follows [Creating GitHub CLI extensions](https://docs.github.com/en/gi
 | source | R02 | Resolve github owner:repo through github.mappings first; otherwise use the GitHub API on github.com. Resolve local alias only through local.mappings. Do not infer identities from URLs. |
 | source | R03 | Remote operations use the repository default branch unless --ref is supplied. Resolve the selected ref to one commit before reading paths; use that commit throughout the operation. |
 | source | R04 | Reject absolute source paths and parent traversal. Local opens must enforce containment within the mapped root even if paths change concurrently. Reject symlink path components and nonregular file sources; skip symlinks and special files in listings. Remote reads and discovery must also exclude symlinks and submodules using Git tree entry types. |
-| config | R05 | Read the single global CUE file ~/.gh-arrow unless --config overrides it. Never discover configuration in the working directory. Missing default config means no mappings; missing explicit config is an error. Empty config means no mappings. |
+| config | R05 | Read global repository mappings from ~/.gh-arrow unless --config overrides it. Never discover repository mappings in a checkout. Missing default config means no mappings; missing explicit config is an error. Empty config means no mappings. Sync separately reads its project manifest as defined by R26. |
 | config | R06 | Validate self-contained CUE against an embedded closed schema. Reject imports, malformed or incomplete values, unknown fields, duplicate repo mappings, empty identities and nonabsolute roots. Compare GitHub mapping identities case-insensitively. Limit configuration to 1 MiB and sanitize diagnostics. Never write configuration at runtime. |
 | files | R07 | cp requires an existing destination parent; do not create directories. Reject directory or special-file destinations, destination symlinks and copying a file onto itself. Stage complete bytes in a private temporary file beside the destination; publish only after successful transfer. Refusal without --force must be race-safe. Failed copies preserve any existing destination and remove temporary files. |
 | automation | R08 | cat emits raw bytes only. cp emits no stdout on success. Send diagnostics to stderr. |
@@ -169,12 +199,18 @@ Packaging follows [Creating GitHub CLI extensions](https://docs.github.com/en/gi
 | discovery | R15 | Organization discovery always checks remote repositories and ignores local mappings. Include accessible private repositories through gh credentials. For user owners combine public owner enumeration with authenticated accessible repository enumeration filtered to that owner; the public user endpoint alone is insufficient. Visibility remains limited by the active credentials. |
 | discovery | R16 | For discovery output owner/repo:path one per line sorted by owner/repo then path. No matches succeeds with empty output. |
 | automation | R17 | Never prompt or launch a browser during file operations. If authentication is needed, fail with guidance to run gh auth login separately. Do not expose credentials in diagnostics. |
-| automation | R18 | ls --json returns a JSON array of records as defined in listing.ts; empty result is []. Reject --json for cat and cp to protect byte-stream semantics. |
-| automation | R19 | Exit 0 for success including no matches; 1 for I/O, network, authentication, rate-limit or incomplete enumeration failures; 2 for invalid arguments, sources or configuration. |
+| automation | R18 | ls --json returns a JSON array of records as defined in listing.ts; empty result is []. Sync also supports --json except for diff. Reject --json for cat and cp to protect byte-stream semantics. |
+| automation | R19 | Exit 0 for success including no matches; 1 for operational failures; 2 for invalid arguments or configuration; 3 only for sync check drift. |
 | automation | R20 | On enumeration failure return nonzero with no success listing on stdout; diagnostics identify the failing operation. Report rate limits without silently skipping repositories. |
-| automation | R21 | Use human-readable stderr messages prefixed by stable error codes: ARROW_USAGE, ARROW_CONFIG, ARROW_NOT_FOUND, ARROW_EXISTS, ARROW_PERMISSION, ARROW_AUTH, ARROW_NETWORK, ARROW_RATE_LIMIT, ARROW_INCOMPLETE, ARROW_IO. |
+| automation | R21 | Use human-readable stderr messages prefixed by stable error codes: ARROW_USAGE, ARROW_CONFIG, ARROW_NOT_FOUND, ARROW_EXISTS, ARROW_PERMISSION, ARROW_AUTH, ARROW_NETWORK, ARROW_RATE_LIMIT, ARROW_INCOMPLETE, ARROW_IO, ARROW_DRIFT. |
 | extension | R22 | Build a gh-arrow executable and publish precompiled release assets following GitHub CLI platform naming conventions. Document local build and gh extension install . once implementation exists. |
 | source | R23 | Use GitHub.com explicitly for remote API access through gh credentials. Encode path and ref values as data; never interpolate them into shell commands. Never forward credentials to unrelated redirect hosts. |
 | automation | R24 | Escape control characters in text listings and diagnostics so each result occupies one line. JSON preserves path values using JSON escaping. cat remains an unmodified byte stream; a failed stream may contain partial bytes and must exit nonzero. |
 | automation | R25 | Use bounded request timeouts, retries and concurrency; support cancellation. API size or enumeration limits must produce a clear nonzero error unless a supported fallback completes the operation. Never silently truncate file bytes or listing results. |
+| files.sync | R26 | Sync reads ./sync.gh-arrow.cue or --file without parent-directory search. A closed self-contained CUE schema requires version: 1 and files: a list of source/destination records. Reject imports unknown fields incomplete values and manifests over 1 MiB. --config continues to select global mappings. |
+| files.sync | R27 | Sync accepts exact nonempty file sources using existing source resolution; reject wildcards and ref fields/options. Mapped sources read the current working tree including uncommitted bytes with no remote fallback. Remote sources resolve the default branch once per repository per run. |
+| files.sync | R28 | Destinations are forward-slash paths relative to the manifest directory. Reject absolute paths traversal symlink components nonregular files duplicate normalized destinations overlapping destinations and overwriting the manifest. Require existing parent directories; never create directories or delete undeclared files. |
+| files.sync | R29 | Stage every source and compare exact bytes before any destination writes. A fetch or planning failure preserves all destinations. Apply replaces declared changed files atomically per file; a publication failure may leave earlier files applied and must report partial application. Cleanup staging on success failure or cancellation. This is not a multi-file transaction. |
+| files.sync | R30 | Status dry-run and check do not write destinations. Report records sorted by destination with source destination status (unchanged modified missing) and resolved backend (local or github). JSON is an array including [] for an empty manifest. Apply reports pre-application statuses after successful publication. Check reports all records then returns ARROW_DRIFT and exit 3 if differences exist. |
+| files.sync | R31 | Diff direction is local destination to upstream source. Missing files use /dev/null as old path. Emit unified text patches preserving missing-newline markers; binary or text beyond the 8 MiB per-side display limit receives a difference notice. A missing empty file receives a creation notice. Diff exits 0 when comparison succeeds even with differences. Escape control characters in labels and notices. Treat text containing control or Unicode format characters as binary except tabs newlines and CRLF line endings. |
 

@@ -7,3 +7,7 @@ C05,gh arrow <command> --help,Show syntax and copyable examples without network 
 C06,gh arrow <command> --config <path>,Override the default ~/.gh-arrow CUE mapping file.,config
 C07,gh arrow <command> --ref <ref>,Select a remote branch tag or commit; reject for mapped sources and organization discovery in v1.,source
 C08,gh arrow --version,Report the embedded project version and available commit metadata without config or network access.,extension
+C09,gh arrow sync [--file <path>] [--dry-run] [--json],Apply file mappings from ./sync.gh-arrow.cue; preview without writing with --dry-run.,files.sync
+C10,gh arrow sync status [--file <path>] [--json],Report missing modified or unchanged destinations.,files.sync
+C11,gh arrow sync diff [--file <path>],Show local-to-upstream unified text diffs and binary difference notices.,files.sync
+C12,gh arrow sync check [--file <path>] [--json],Audit drift without writes; exit 3 for missing or modified files.,files.sync

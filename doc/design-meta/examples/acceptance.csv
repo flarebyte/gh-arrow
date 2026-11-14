@@ -20,3 +20,9 @@ A18,Listing path contains a newline or terminal escape character,Escape controls
 A19,Version requested with an absent explicit config and no network access,Exit 0 with embedded project version; do not read runtime config or credentials.,extension
 A20,Global home CUE config and a checkout containing .gh-arrow,Use only the home mappings; ignore checkout configuration. Explicit --config selects only its named file.,config
 A21,CUE imports; unknown fields; incomplete values; duplicate mappings; nonabsolute roots,Exit 2 without exposing configuration values or absolute file paths in diagnostics.,config
+A22,Sync missing binary and text files then change a destination and audit again,Dry-run/status/check preserve destinations; check exits 3 for drift; apply preserves exact bytes; subsequent check exits 0; diff runs local to upstream.,files.sync
+A23,A later upstream file fails during sync planning,Exit 1 with no success output; preserve all destinations; mapped source never falls back remotely.,files.sync
+A24,Sync manifest has traversal absolute duplicate or overlapping destinations unknown ref wildcard source imports or self-overwrite,Exit 2 before fetching or changing files.,files.sync
+A25,Sync source is a directory or destination has symlink components or missing parent,Exit 1 without changing destinations or creating directories.,files.sync
+A26,Several sync sources share one remote repository while its default branch moves,Resolve the repository once and use the same commit for all files; mapped sources use current working-tree bytes.,files.sync
+A27,Sync diff encounters ESC BEL backspace DEL C1 Unicode format controls or bare CR in either file or context,Emit a safe binary difference notice; preserve ordinary Unicode tabs and CRLF text in patches.,files.sync

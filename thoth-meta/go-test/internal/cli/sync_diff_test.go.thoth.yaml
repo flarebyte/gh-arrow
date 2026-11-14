@@ -1,0 +1,16 @@
+locator: internal/cli/sync_diff_test.go
+meta:
+  purpose: "Verify unified diff ranges, surrounding context, and missing-newline markers."
+  function_list:
+    - TestSyncDiffPreservesOrdinaryText
+    - TestSyncDiffRejectsTerminalControlsA27
+    - TestUnifiedDiffRangesAndNewlines
+  import_files_list:
+    - bytes
+    - context
+    - fmt
+    - github.com/flarebyte/gh-arrow/internal/local
+    - os
+    - path/filepath
+    - testing
+  language: go

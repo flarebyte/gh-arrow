@@ -1,0 +1,20 @@
+locator: internal/syncmanifest/manifest.go
+meta:
+  purpose: "Validate the closed project CUE manifest and enforce exact sources and unique confined destination paths."
+  function_list:
+    - Load
+    - invalid
+  import_files_list:
+    - cuelang.org/go/cue
+    - cuelang.org/go/cue/ast
+    - cuelang.org/go/cue/cuecontext
+    - cuelang.org/go/cue/parser
+    - github.com/flarebyte/gh-arrow/internal/diagnostic
+    - github.com/flarebyte/gh-arrow/internal/source
+    - io
+    - os
+    - path
+    - path/filepath
+    - sort
+    - strings
+  language: go

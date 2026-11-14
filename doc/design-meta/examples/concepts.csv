@@ -6,3 +6,4 @@ files,File operations,
 files.list,Directory listing and glob patterns,files
 discovery,Organization or user repository discovery,
 automation,Human and agent interaction contracts,
+files.sync,Declarative one-way project file synchronisation,files
